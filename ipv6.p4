@@ -107,7 +107,15 @@ control MyIngress(inout headers hdr,
 
     apply {
         if (hdr.ipv6.isValid()) {
-            ipv6_lpm.apply();
+            if(hdr.ipv6.ttl != 0){
+                ipv6_lpm.apply();
+            }
+            else {
+                drop();
+            }
+        }
+        else {
+            drop();
         }
     }
 }
