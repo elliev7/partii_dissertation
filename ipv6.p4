@@ -55,7 +55,6 @@ parser MyParser(packet_in packet,
         packet.extract(hdr.ethernet);
         transition select(hdr.ethernet.etherType) {
             TYPE_IPV6: parse_ipv6;
-            default: accept;
         }
     }
 
@@ -101,13 +100,13 @@ control MyIngress(inout headers hdr,
             drop;
             NoAction;
         }
-        size = 1024;
+        //size = 1024;?
         default_action = drop();
     }
 
     apply {
         if (hdr.ipv6.isValid()) {
-            if(hdr.ipv6.ttl != 0){
+            if(hdr.ipv6.ttl != 0) {
                 ipv6_lpm.apply();
             }
             else {
