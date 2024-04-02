@@ -124,7 +124,7 @@ control MyIngress(inout headers hdr,
         hdr.icmpv6.type = 129;
         hdr.icmpv6.checksum = 0;
 
-	    bit<128> tmp_ip = hdr.ipv6.srcAddr;
+	bit<128> tmp_ip = hdr.ipv6.srcAddr;
         hdr.ipv6.srcAddr = hdr.ipv6.dstAddr;
         hdr.ipv6.dstAddr = tmp_ip;
 
