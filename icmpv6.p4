@@ -4,6 +4,9 @@
 
 const bit<16> TYPE_IPV6 = 0x86DD;
 const bit<8>  TYPE_ICMPV6 = 0x3A;
+const bit<8> TYPE_ECHO_REQUEST = 0x80;
+const bit<8> TYPE_ECHO_REPLY = 0x81;
+const bit<8> TYPE_TTL_EXCEEDED = 0x3;
 
 /*************************************************************************
 *********************** H E A D E R S  ***********************************
@@ -19,14 +22,6 @@ header ethernet_t {
     bit<16>   etherType;
 }
 
-header icmpv6_t {
-    bit<8> type;
-    bit<8> code;
-    bit<16> checksum;
-    bit<16> identifier;
-    bit<16> sequence_number;
-}
-
 header ipv6_t {
     bit<4>      version;
     bit<8>      trafficClass;
@@ -38,15 +33,28 @@ header ipv6_t {
     ip6Addr_t   dstAddr;
 }
 
+header icmpv6_t {
+    bit<8> type;
+    bit<8> code;
+    bit<16> checksum;
+}
+
+header echo_t {
+    bit<16> identifier;
+    bit<16> sequence_number;
+    bit<128> timestamp;
+    bit<320> data;
+}
 
 struct metadata {
     /* empty */
 }
 
 struct headers {
-    ethernet_t   ethernet;
-    ipv6_t       ipv6;
-    icmpv6_t     icmpv6;
+    ethernet_t  ethernet;
+    ipv6_t      ipv6;
+    icmpv6_t    icmpv6;
+    echo_t      echo;
 }
 
 /*************************************************************************
@@ -79,7 +87,14 @@ parser MyParser(packet_in packet,
 
     state parse_icmpv6 {
       packet.extract(hdr.icmpv6);
-      transition accept;
+      transition select(hdr.icmpv6.type) {
+        TYPE_ECHO_REQUEST: parse_echo;
+      }
+    }
+
+    state parse_echo {
+        packet.extract(hdr.echo);
+        transition accept;
     }
 }
 
@@ -105,7 +120,7 @@ control MyIngress(inout headers hdr,
     }
     
 
-    action icmpv6_reply() {
+    action echo_reply() {
         hdr.icmpv6.type = 129;
         hdr.icmpv6.checksum = 0;
 
@@ -120,27 +135,32 @@ control MyIngress(inout headers hdr,
         standard_metadata.egress_port = standard_metadata.ingress_port;
     }
     
-    table icmpv6_responder {
+    table echo_responder {
         key = {
             hdr.ethernet.dstAddr: exact;
             hdr.ipv6.dstAddr: exact;
         }
         actions = {
-            icmpv6_reply;
+            echo_reply;
             drop;
             NoAction;
         }
         default_action = drop();
 
         const entries = {
-            (0xaaaaaabbcccc, 0xfe80000000000000a2cec8fffea20000): icmpv6_reply;
+            (0xaaaaaabbcccc, 0xfe80000000000000a2cec8fffea20000): echo_reply;
         }
     }
 
     apply {
         if (hdr.ipv6.isValid()) {
             if (hdr.icmpv6.isValid()) {
-                icmpv6_responder.apply();
+                if (hdr.icmpv6.type == TYPE_ECHO_REQUEST) {
+                    echo_responder.apply();
+                }
+                else {
+                    drop();
+                }
             }
             else {
                 drop();
@@ -169,16 +189,19 @@ control MyEgress(inout headers hdr,
 control MyComputeChecksum(inout headers hdr, inout metadata meta) {
      apply {
         update_checksum(
-            hdr.icmpv6.isValid(),
+            hdr.echo.isValid(),
             {
                 hdr.ipv6.srcAddr,
                 hdr.ipv6.dstAddr,
                 hdr.ipv6.payloadLen,
+                24w0,
                 hdr.ipv6.nextHeader,
                 hdr.icmpv6.type,
                 hdr.icmpv6.code,
-                hdr.icmpv6.identifier,
-                hdr.icmpv6.sequence_number
+                hdr.echo.identifier,
+                hdr.echo.sequence_number,
+                hdr.echo.timestamp,
+                hdr.echo.data
             },
             hdr.icmpv6.checksum,
             HashAlgorithm.csum16
@@ -196,6 +219,7 @@ control MyDeparser(packet_out packet, in headers hdr) {
         packet.emit(hdr.ethernet);
         packet.emit(hdr.ipv6);
         packet.emit(hdr.icmpv6);
+        packet.emit(hdr.echo);
     }
 }
 
