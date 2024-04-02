@@ -37,14 +37,24 @@ header icmpv6_t {
     bit<8> type;
     bit<8> code;
     bit<16> checksum;
+    bit<480> data;
 }
 
-header echo_t {
-    bit<16> identifier;
-    bit<16> sequence_number;
-    bit<128> timestamp;
-    bit<320> data;
-}
+/* DATA encompasses the maximum between these two icmp structures.
+    header echo_t {
+        bit<16> identifier;
+        bit<16> sequence_number;
+        bit<128> timestamp;
+        bit<320> data;
+    }
+
+    header ttlex_t {
+        bit<32> unused;
+        bit<320> ipv6_datagram;
+        bit<32> icmpv6_datagram;
+        bit<480> echo_datagram;
+    }
+*/
 
 struct metadata {
     /* empty */
@@ -54,7 +64,6 @@ struct headers {
     ethernet_t  ethernet;
     ipv6_t      ipv6;
     icmpv6_t    icmpv6;
-    echo_t      echo;
 }
 
 /*************************************************************************
@@ -87,14 +96,7 @@ parser MyParser(packet_in packet,
 
     state parse_icmpv6 {
       packet.extract(hdr.icmpv6);
-      transition select(hdr.icmpv6.type) {
-        TYPE_ECHO_REQUEST: parse_echo;
-      }
-    }
-
-    state parse_echo {
-        packet.extract(hdr.echo);
-        transition accept;
+      transition accept;
     }
 }
 
@@ -121,16 +123,17 @@ control MyIngress(inout headers hdr,
     
 
     action echo_reply() {
-        hdr.icmpv6.type = 129;
+        hdr.icmpv6.type = TYPE_ECHO_REPLY;
         hdr.icmpv6.checksum = 0;
 
-	bit<128> tmp_ip = hdr.ipv6.srcAddr;
+	    bit<128> tmp_ip = hdr.ipv6.srcAddr;
         hdr.ipv6.srcAddr = hdr.ipv6.dstAddr;
         hdr.ipv6.dstAddr = tmp_ip;
+        hdr.ipv6.ttl = 64;
 
-        bit<48> tmp_mac = hdr.ethernet.dstAddr;
-        hdr.ethernet.dstAddr = hdr.ethernet.srcAddr;
-        hdr.ethernet.srcAddr = tmp_mac;
+        bit<48> tmp_mac = hdr.ethernet.srcAddr;
+        hdr.ethernet.srcAddr = hdr.ethernet.dstAddr;
+        hdr.ethernet.dstAddr = tmp_mac;
 
         standard_metadata.egress_port = standard_metadata.ingress_port;
     }
@@ -148,22 +151,48 @@ control MyIngress(inout headers hdr,
         default_action = drop();
 
         const entries = {
-            (0xaaaaaabbcccc, 0xfe80000000000000a2cec8fffea20000): echo_reply;
+            (0xaa11bb22cc33, 0xfe80000000000000a2cec8fffea21111): echo_reply;
+            (0xaaaabbbbcccc, 0xfe80000000000000000a000c000f0001): echo_reply;
         }
+    }
+
+    action ttlex_reply() {
+        bit<32> unused = 32w0;
+        bit<320> ipv6_datagram = hdr.ipv6.version ++ hdr.ipv6.trafficClass ++ hdr.ipv6.flowLabel ++ hdr.ipv6.payloadLen ++ hdr.ipv6.nextHeader ++ hdr.ipv6.ttl ++ hdr.ipv6.srcAddr ++ hdr.ipv6.dstAddr;
+        bit<32> icmpv6_datagram = hdr.icmpv6.type ++ hdr.icmpv6.code ++ hdr.icmpv6.checksum;
+        bit<480> echo_datagram = hdr.icmpv6.data;
+
+        hdr.icmpv6.type = TYPE_TTL_EXCEEDED;
+        hdr.icmpv6.checksum = 0;
+        hdr.icmpv6.data = unused ++ ipv6_datagram ++ icmpv6_datagram ++ echo_datagram[479:384];
+
+        hdr.ipv6.dstAddr = hdr.ipv6.srcAddr;
+        hdr.ipv6.srcAddr = 0xfe80000000000000a2cec8fffea20000;
+        hdr.ipv6.ttl = 64;
+
+        hdr.ethernet.dstAddr = hdr.ethernet.srcAddr;
+        hdr.ethernet.srcAddr = 0xaa00aa00aa00;
+
+        standard_metadata.egress_port = standard_metadata.ingress_port; 
     }
 
     apply {
         if (hdr.ipv6.isValid()) {
-            if (hdr.icmpv6.isValid()) {
-                if (hdr.icmpv6.type == TYPE_ECHO_REQUEST) {
-                    echo_responder.apply();
+            if (hdr.ipv6.ttl > 1) {            
+                if (hdr.icmpv6.isValid()) {
+                    if (hdr.icmpv6.type == TYPE_ECHO_REQUEST) {
+                        echo_responder.apply();
+                    }
+                    else {
+                        drop();
+                    }
                 }
                 else {
                     drop();
                 }
             }
             else {
-                drop();
+                ttlex_reply();
             }
         }
         else {
@@ -189,7 +218,7 @@ control MyEgress(inout headers hdr,
 control MyComputeChecksum(inout headers hdr, inout metadata meta) {
      apply {
         update_checksum(
-            hdr.echo.isValid(),
+            hdr.icmpv6.isValid(),
             {
                 hdr.ipv6.srcAddr,
                 hdr.ipv6.dstAddr,
@@ -198,10 +227,7 @@ control MyComputeChecksum(inout headers hdr, inout metadata meta) {
                 hdr.ipv6.nextHeader,
                 hdr.icmpv6.type,
                 hdr.icmpv6.code,
-                hdr.echo.identifier,
-                hdr.echo.sequence_number,
-                hdr.echo.timestamp,
-                hdr.echo.data
+                hdr.icmpv6.data
             },
             hdr.icmpv6.checksum,
             HashAlgorithm.csum16
@@ -219,7 +245,6 @@ control MyDeparser(packet_out packet, in headers hdr) {
         packet.emit(hdr.ethernet);
         packet.emit(hdr.ipv6);
         packet.emit(hdr.icmpv6);
-        packet.emit(hdr.echo);
     }
 }
 
