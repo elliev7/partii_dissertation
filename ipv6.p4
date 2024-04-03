@@ -100,13 +100,12 @@ control MyIngress(inout headers hdr,
             drop;
             NoAction;
         }
-        //size = 1024;?
         default_action = drop();
     }
 
     apply {
         if (hdr.ipv6.isValid()) {
-            if(hdr.ipv6.ttl != 0) {
+            if(hdr.ipv6.ttl > 1) {
                 ipv6_lpm.apply();
             }
             else {
