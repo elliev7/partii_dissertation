@@ -40,22 +40,6 @@ header icmpv6_t {
     bit<480> data;
 }
 
-/* DATA encompasses the maximum between these two icmp structures.
-    header echo_t {
-        bit<16> identifier;
-        bit<16> sequence_number;
-        bit<128> timestamp;
-        bit<320> data;
-    }
-
-    header ttlex_t {
-        bit<32> unused;
-        bit<320> ipv6_datagram;
-        bit<32> icmpv6_datagram;
-        bit<480> echo_datagram;
-    }
-*/
-
 struct metadata {
     /* empty */
 }
