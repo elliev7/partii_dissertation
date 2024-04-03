@@ -6,7 +6,7 @@ const bit<16> TYPE_IPV6 = 0x86DD;
 const bit<8>  TYPE_ICMPV6 = 0x3A;
 const bit<8> TYPE_ECHO_REQUEST = 0x80;
 const bit<8> TYPE_ECHO_REPLY = 0x81;
-const bit<8> TYPE_TTL_EXCEEDED = 0x3;
+const bit<8> TYPE_HOPLIMIT_EXCEEDED = 0x3;
 
 /*************************************************************************
 *********************** H E A D E R S  ***********************************
@@ -28,7 +28,7 @@ header ipv6_t {
     bit<20>     flowLabel;
     bit<16>     payloadLen;
     bit<8>      nextHeader;
-    bit<8>      ttl;
+    bit<8>      hopLimit;
     ip6Addr_t   srcAddr;
     ip6Addr_t   dstAddr;
 }
@@ -113,7 +113,7 @@ control MyIngress(inout headers hdr,
 	    bit<128> tmp_ip = hdr.ipv6.srcAddr;
         hdr.ipv6.srcAddr = hdr.ipv6.dstAddr;
         hdr.ipv6.dstAddr = tmp_ip;
-        hdr.ipv6.ttl = 64;
+        hdr.ipv6.hopLimit = 64;
 
         bit<48> tmp_mac = hdr.ethernet.srcAddr;
         hdr.ethernet.srcAddr = hdr.ethernet.dstAddr;
@@ -140,19 +140,19 @@ control MyIngress(inout headers hdr,
         }
     }
 
-    action ttlex_reply() {
+    action hopex_reply() {
         bit<32> unused = 32w0;
         bit<320> ipv6_datagram = hdr.ipv6.version ++ hdr.ipv6.trafficClass ++ hdr.ipv6.flowLabel ++ hdr.ipv6.payloadLen ++ hdr.ipv6.nextHeader ++ hdr.ipv6.ttl ++ hdr.ipv6.srcAddr ++ hdr.ipv6.dstAddr;
         bit<32> icmpv6_datagram = hdr.icmpv6.type ++ hdr.icmpv6.code ++ hdr.icmpv6.checksum;
         bit<480> echo_datagram = hdr.icmpv6.data;
 
-        hdr.icmpv6.type = TYPE_TTL_EXCEEDED;
+        hdr.icmpv6.type = TYPE_HOPLIMIT_EXCEEDED;
         hdr.icmpv6.checksum = 0;
         hdr.icmpv6.data = unused ++ ipv6_datagram ++ icmpv6_datagram ++ echo_datagram[479:384];
 
         hdr.ipv6.dstAddr = hdr.ipv6.srcAddr;
         hdr.ipv6.srcAddr = 0xfe80000000000000a2cec8fffea20000;
-        hdr.ipv6.ttl = 64;
+        hdr.ipv6.hopLimit = 64;
 
         hdr.ethernet.dstAddr = hdr.ethernet.srcAddr;
         hdr.ethernet.srcAddr = 0xaa00aa00aa00;
@@ -162,7 +162,7 @@ control MyIngress(inout headers hdr,
 
     apply {
         if (hdr.ipv6.isValid()) {
-            if (hdr.ipv6.ttl > 1) {            
+            if (hdr.ipv6.hopLimit > 1) {            
                 if (hdr.icmpv6.isValid()) {
                     if (hdr.icmpv6.type == TYPE_ECHO_REQUEST) {
                         echo_responder.apply();
@@ -176,7 +176,7 @@ control MyIngress(inout headers hdr,
                 }
             }
             else {
-                ttlex_reply();
+                hopex_reply();
             }
         }
         else {

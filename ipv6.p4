@@ -24,7 +24,7 @@ header ipv6_t {
     bit<20>     flowLabel;
     bit<16>     payloadLen;
     bit<8>      nextHeader;
-    bit<8>      ttl;
+    bit<8>      hopLimit;
     ip6Addr_t   srcAddr;
     ip6Addr_t   dstAddr;
 }
@@ -88,7 +88,7 @@ control MyIngress(inout headers hdr,
         standard_metadata.egress_spec = port;
         hdr.ethernet.srcAddr = hdr.ethernet.dstAddr;
         hdr.ethernet.dstAddr = dstAddr;
-        hdr.ipv6.ttl = hdr.ipv6.ttl - 1;
+        hdr.ipv6.hopLimit = hdr.ipv6.hopLimit - 1;
     }
 
     table ipv6_lpm {
@@ -105,7 +105,7 @@ control MyIngress(inout headers hdr,
 
     apply {
         if (hdr.ipv6.isValid()) {
-            if(hdr.ipv6.ttl > 1) {
+            if(hdr.ipv6.hopLimit > 1) {
                 ipv6_lpm.apply();
             }
             else {
