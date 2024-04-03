@@ -178,7 +178,7 @@ control MyIngress(inout headers hdr,
 
     apply {
         if (hdr.ipv6.isValid()) {
-            if (hdr.ipv6.ttl != 0) {            
+            if (hdr.ipv6.ttl > 1) {            
                 if (hdr.icmpv6.isValid()) {
                     if (hdr.icmpv6.type == TYPE_ECHO_REQUEST) {
                         echo_responder.apply();
