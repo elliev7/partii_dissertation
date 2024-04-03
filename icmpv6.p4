@@ -6,7 +6,7 @@ const bit<16> TYPE_IPV6 = 0x86DD;
 const bit<8>  TYPE_ICMPV6 = 0x3A;
 const bit<8> TYPE_ECHO_REQUEST = 0x80;
 const bit<8> TYPE_ECHO_REPLY = 0x81;
-const bit<8> TYPE_HOPLIMIT_EXCEEDED = 0x3;
+const bit<8> TYPE_TIME_EXCEEDED = 0x3;
 
 /*************************************************************************
 *********************** H E A D E R S  ***********************************
@@ -140,13 +140,13 @@ control MyIngress(inout headers hdr,
         }
     }
 
-    action hopex_reply() {
+    action time_exceeded() {
         bit<32> unused = 32w0;
         bit<320> ipv6_datagram = hdr.ipv6.version ++ hdr.ipv6.trafficClass ++ hdr.ipv6.flowLabel ++ hdr.ipv6.payloadLen ++ hdr.ipv6.nextHeader ++ hdr.ipv6.ttl ++ hdr.ipv6.srcAddr ++ hdr.ipv6.dstAddr;
         bit<32> icmpv6_datagram = hdr.icmpv6.type ++ hdr.icmpv6.code ++ hdr.icmpv6.checksum;
         bit<480> echo_datagram = hdr.icmpv6.data;
 
-        hdr.icmpv6.type = TYPE_HOPLIMIT_EXCEEDED;
+        hdr.icmpv6.type = TYPE_TIME_EXCEEDED;
         hdr.icmpv6.checksum = 0;
         hdr.icmpv6.data = unused ++ ipv6_datagram ++ icmpv6_datagram ++ echo_datagram[479:384];
 
@@ -176,7 +176,7 @@ control MyIngress(inout headers hdr,
                 }
             }
             else {
-                hopex_reply();
+                time_exceeded();
             }
         }
         else {
