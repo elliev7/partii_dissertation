@@ -4,9 +4,9 @@
 
 const bit<16> TYPE_IPV6 = 0x86DD;
 const bit<8>  TYPE_ICMPV6 = 0x3A;
-const bit<8> TYPE_ECHO_REQUEST = 0x80;
-const bit<8> TYPE_ECHO_REPLY = 0x81;
-const bit<8> TYPE_TIME_EXCEEDED = 0x3;
+const bit<8>  TYPE_ECHO_REQUEST = 0x80;
+const bit<8>  TYPE_ECHO_REPLY = 0x81;
+const bit<8>  TYPE_TIME_EXCEEDED = 0x3;
 
 /*************************************************************************
 *********************** H E A D E R S  ***********************************
