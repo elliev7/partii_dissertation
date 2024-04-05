@@ -150,8 +150,7 @@ control MyIngress(inout headers hdr,
         default_action = drop();
 
         const entries = {
-            (0xaa11bb22cc33, 0xfe80000000000000a2cec8fffea21111): echo_reply;
-            (0xaaaabbbbcccc, 0xfe80000000000000000a000c000f0001): echo_reply;
+            (0xaa00aa00aa00, 0x00010000000000000002000300040005): echo_reply;
         }
     }
 
@@ -252,10 +251,10 @@ control MyDeparser(packet_out packet, in headers hdr) {
 *************************************************************************/
 
 V1Switch(
-MyParser(),
-MyVerifyChecksum(),
-MyIngress(),
-MyEgress(),
-MyComputeChecksum(),
-MyDeparser()
+    MyParser(),
+    MyVerifyChecksum(),
+    MyIngress(),
+    MyEgress(),
+    MyComputeChecksum(),
+    MyDeparser()
 ) main;
