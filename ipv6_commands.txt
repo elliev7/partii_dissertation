@@ -1,2 +1,0 @@
-table_add MyIngress.ipv6_lpm MyIngress.ipv6_forward fe80::a2ce:c8ff:fea2:6d18/128 => e4:5f:01:f2:1e:23 0
-table_add MyIngress.ipv6_lpm MyIngress.ipv6_forward fe80::224:9bff:fe80:7835/128 => e4:5f:01:f2:1f:01 1
