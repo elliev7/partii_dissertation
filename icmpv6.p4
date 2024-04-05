@@ -17,9 +17,9 @@ typedef bit<48> macAddr_t;
 typedef bit<128> ip6Addr_t;
 
 header ethernet_t {
-    macAddr_t dstAddr;
-    macAddr_t srcAddr;
-    bit<16>   etherType;
+    macAddr_t   dstAddr;
+    macAddr_t   srcAddr;
+    bit<16>     etherType;
 }
 
 header ipv6_t {
@@ -34,10 +34,10 @@ header ipv6_t {
 }
 
 header icmpv6_t {
-    bit<8> type;
-    bit<8> code;
-    bit<16> checksum;
-    bit<480> data;
+    bit<8>      type;
+    bit<8>      code;
+    bit<16>     checksum;
+    bit<480>    data;
 }
 
 struct metadata {
