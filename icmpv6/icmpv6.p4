@@ -128,7 +128,7 @@ control MyIngress(inout headers hdr,
 	    bit<128> tmp_ip = hdr.ipv6.srcAddr;
         hdr.ipv6.srcAddr = hdr.ipv6.dstAddr;
         hdr.ipv6.dstAddr = tmp_ip;
-        hdr.ipv6.hopLimit = 64;
+        hdr.ipv6.hopLimit = 255;
 
         bit<48> tmp_mac = hdr.ethernet.srcAddr;
         hdr.ethernet.srcAddr = hdr.ethernet.dstAddr;
@@ -166,7 +166,7 @@ control MyIngress(inout headers hdr,
 
         hdr.ipv6.dstAddr = hdr.ipv6.srcAddr;
         hdr.ipv6.srcAddr = 0x00010000000000000002000300040005;
-        hdr.ipv6.hopLimit = 64;
+        hdr.ipv6.hopLimit = 255;
 
         hdr.ethernet.dstAddr = hdr.ethernet.srcAddr;
         hdr.ethernet.srcAddr = 0xaa00aa00aa00;
