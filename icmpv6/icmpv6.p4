@@ -37,7 +37,12 @@ header icmpv6_t {
     bit<8>      type;
     bit<8>      code;
     bit<16>     checksum;
-    bit<480>    data;
+}
+
+header echo_t {
+    bit<16>     identifier;
+    bit<16>     seqNum;
+    bit<448>    data;
 }
 
 struct metadata {
@@ -48,6 +53,7 @@ struct headers {
     ethernet_t  ethernet;
     ipv6_t      ipv6;
     icmpv6_t    icmpv6;
+    echo_t      echo;
 }
 
 /*************************************************************************
@@ -80,7 +86,14 @@ parser MyParser(packet_in packet,
 
     state parse_icmpv6 {
       packet.extract(hdr.icmpv6);
-      transition accept;
+      transition select(hdr.icmpv6.type) {
+        TYPE_ECHO_REQUEST: parse_echo;
+      }
+    }
+
+    state parse_echo {
+        packet.extract(hdr.echo);
+        transition accept;
     }
 }
 
@@ -101,7 +114,9 @@ control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
                 hdr.ipv6.nextHeader,
                 hdr.icmpv6.type,
                 hdr.icmpv6.code,
-                hdr.icmpv6.data
+                hdr.echo.identifier,
+                hdr.echo.seqNum,
+                hdr.echo.data
             },
             hdr.icmpv6.checksum,
             HashAlgorithm.csum16
@@ -155,14 +170,15 @@ control MyIngress(inout headers hdr,
     }
 
     action time_exceeded() {
-        bit<32> unused = 32w0;
         bit<320> ipv6_datagram = hdr.ipv6.version ++ hdr.ipv6.trafficClass ++ hdr.ipv6.flowLabel ++ hdr.ipv6.payloadLen ++ hdr.ipv6.nextHeader ++ hdr.ipv6.hopLimit ++ hdr.ipv6.srcAddr ++ hdr.ipv6.dstAddr;
         bit<32> icmpv6_datagram = hdr.icmpv6.type ++ hdr.icmpv6.code ++ hdr.icmpv6.checksum;
-        bit<480> echo_datagram = hdr.icmpv6.data;
+        bit<480> echo_datagram = hdr.echo.identifier ++ hdr.echo.seqNum ++ hdr.echo.data;
 
         hdr.icmpv6.type = TYPE_TIME_EXCEEDED;
         hdr.icmpv6.checksum = 0;
-        hdr.icmpv6.data = unused ++ ipv6_datagram ++ icmpv6_datagram ++ echo_datagram[479:384];
+        hdr.echo.identifier = 0;
+        hdr.echo.seqNum = 0;
+        hdr.echo.data = ipv6_datagram ++ icmpv6_datagram ++ echo_datagram[479:384];
 
         hdr.ipv6.dstAddr = hdr.ipv6.srcAddr;
         hdr.ipv6.srcAddr = 0x00010000000000000002000300040005;
@@ -225,7 +241,9 @@ control MyComputeChecksum(inout headers hdr, inout metadata meta) {
                 hdr.ipv6.nextHeader,
                 hdr.icmpv6.type,
                 hdr.icmpv6.code,
-                hdr.icmpv6.data
+                hdr.echo.identifier,
+                hdr.echo.seqNum,
+                hdr.echo.data
             },
             hdr.icmpv6.checksum,
             HashAlgorithm.csum16
@@ -243,6 +261,7 @@ control MyDeparser(packet_out packet, in headers hdr) {
         packet.emit(hdr.ethernet);
         packet.emit(hdr.ipv6);
         packet.emit(hdr.icmpv6);
+        packet.emit(hdr.echo);
     }
 }
 
