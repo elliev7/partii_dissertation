@@ -1,0 +1,1 @@
+table_add MyIngress.ndp_responder MyIngress.ndp_adv 1::2:3:4:5 => aa:00:aa:00:aa:00
