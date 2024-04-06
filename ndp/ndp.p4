@@ -36,6 +36,9 @@ header icmpv6_t {
     bit<8>      type;
     bit<8>      code;
     bit<16>     checksum;
+}
+
+header ndp_t {
     bit<1>      rFlag;
     bit<1>      sFlag;
     bit<1>      oFlag;
@@ -54,6 +57,7 @@ struct headers {
     ethernet_t  ethernet;
     ipv6_t      ipv6;
     icmpv6_t    icmpv6;
+    ndp_t       ndp;
 }
 
 /*************************************************************************
@@ -85,6 +89,13 @@ parser MyParser(packet_in packet,
 
     state parse_icmpv6 {
       packet.extract(hdr.icmpv6);
+      transition select(hdr.icmpv6.type) {
+        TYPE_NDP_SOL: parse_ndp;
+      }
+    }
+
+    state parse_ndp {
+      packet.extract(hdr.ndp);
       transition accept;
     }
 
@@ -106,14 +117,14 @@ control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
                 hdr.ipv6.nextHeader,
                 hdr.icmpv6.type,
                 hdr.icmpv6.code,
-                hdr.icmpv6.rFlag,
-                hdr.icmpv6.sFlag,
-                hdr.icmpv6.oFlag,
-                hdr.icmpv6.reserved,
-                hdr.icmpv6.trgAddr,
-                hdr.icmpv6.optType,
-                hdr.icmpv6.optLen,
-                hdr.icmpv6.llAddr
+                hdr.ndp.rFlag,
+                hdr.ndp.sFlag,
+                hdr.ndp.oFlag,
+                hdr.ndp.reserved,
+                hdr.ndp.trgAddr,
+                hdr.ndp.optType,
+                hdr.ndp.optLen,
+                hdr.ndp.llAddr
             },
             hdr.icmpv6.checksum,
             HashAlgorithm.csum16
@@ -136,11 +147,11 @@ control MyIngress(inout headers hdr,
     action ndp_adv(macAddr_t llAddr) {
         hdr.icmpv6.type = TYPE_NDP_ADV;
         hdr.icmpv6.checksum = 0;
-        hdr.icmpv6.rFlag = 1;
-        hdr.icmpv6.sFlag = 1;
-        hdr.icmpv6.oFlag = 1;
-        hdr.icmpv6.optType = 0x02;
-        hdr.icmpv6.llAddr = llAddr;
+        hdr.ndp.rFlag = 1;
+        hdr.ndp.sFlag = 1;
+        hdr.ndp.oFlag = 1;
+        hdr.ndp.optType = 0x02;
+        hdr.ndp.llAddr = llAddr;
 
         hdr.ipv6.dstAddr = hdr.ipv6.srcAddr;
         hdr.ipv6.srcAddr = 0x00010000000000000002000300040005;
@@ -154,7 +165,7 @@ control MyIngress(inout headers hdr,
     
     table ndp_responder {
         key = {
-            hdr.icmpv6.trgAddr: exact;
+            hdr.ndp.trgAddr: exact;
         }
         actions = {
             ndp_adv;
@@ -215,14 +226,14 @@ control MyComputeChecksum(inout headers hdr, inout metadata meta) {
                 hdr.ipv6.nextHeader,
                 hdr.icmpv6.type,
                 hdr.icmpv6.code,
-                hdr.icmpv6.rFlag,
-                hdr.icmpv6.sFlag,
-                hdr.icmpv6.oFlag,
-                hdr.icmpv6.reserved,
-                hdr.icmpv6.trgAddr,
-                hdr.icmpv6.optType,
-                hdr.icmpv6.optLen,
-                hdr.icmpv6.llAddr
+                hdr.ndp.rFlag,
+                hdr.ndp.sFlag,
+                hdr.ndp.oFlag,
+                hdr.ndp.reserved,
+                hdr.ndp.trgAddr,
+                hdr.ndp.optType,
+                hdr.ndp.optLen,
+                hdr.ndp.llAddr
             },
             hdr.icmpv6.checksum,
             HashAlgorithm.csum16
@@ -240,6 +251,7 @@ control MyDeparser(packet_out packet, in headers hdr) {
         packet.emit(hdr.ethernet);
         packet.emit(hdr.ipv6);
         packet.emit(hdr.icmpv6);
+        packet.emit(hdr.ndp);
     }
 }
 
