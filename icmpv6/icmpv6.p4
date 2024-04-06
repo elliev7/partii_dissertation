@@ -4,9 +4,9 @@
 
 const bit<16> TYPE_IPV6 = 0x86DD;
 const bit<8>  TYPE_ICMPV6 = 0x3A;
-const bit<8>  TYPE_ECHO_REQUEST = 0x80;
-const bit<8>  TYPE_ECHO_REPLY = 0x81;
-const bit<8>  TYPE_TIME_EXCEEDED = 0x3;
+const bit<8>  TYPE_ECHO_REQ = 0x80;
+const bit<8>  TYPE_ECHO_REP = 0x81;
+const bit<8>  TYPE_TIME_EXC = 0x3;
 
 /*************************************************************************
 *********************** H E A D E R S  ***********************************
@@ -87,7 +87,7 @@ parser MyParser(packet_in packet,
     state parse_icmpv6 {
       packet.extract(hdr.icmpv6);
       transition select(hdr.icmpv6.type) {
-        TYPE_ECHO_REQUEST: parse_echo;
+        TYPE_ECHO_REQ: parse_echo;
       }
     }
 
@@ -137,7 +137,7 @@ control MyIngress(inout headers hdr,
     
 
     action echo_reply() {
-        hdr.icmpv6.type = TYPE_ECHO_REPLY;
+        hdr.icmpv6.type = TYPE_ECHO_REP;
         hdr.icmpv6.checksum = 0;
 
 	    bit<128> tmp_ip = hdr.ipv6.srcAddr;
@@ -174,7 +174,7 @@ control MyIngress(inout headers hdr,
         bit<32> icmpv6_datagram = hdr.icmpv6.type ++ hdr.icmpv6.code ++ hdr.icmpv6.checksum;
         bit<480> echo_datagram = hdr.echo.identifier ++ hdr.echo.seqNum ++ hdr.echo.data;
 
-        hdr.icmpv6.type = TYPE_TIME_EXCEEDED;
+        hdr.icmpv6.type = TYPE_TIME_EXC;
         hdr.icmpv6.checksum = 0;
         hdr.echo.identifier = 0;
         hdr.echo.seqNum = 0;
@@ -194,7 +194,7 @@ control MyIngress(inout headers hdr,
         if (hdr.ipv6.isValid()) {
             if (hdr.ipv6.hopLimit > 1) {            
                 if (hdr.icmpv6.isValid()) {
-                    if (hdr.icmpv6.type == TYPE_ECHO_REQUEST) {
+                    if (hdr.icmpv6.type == TYPE_ECHO_REQ) {
                         echo_responder.apply();
                     }
                     else {
