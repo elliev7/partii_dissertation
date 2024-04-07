@@ -1,0 +1,5 @@
+table_add MyIngress.ipv6_lpm MyIngress.forward fe80::a2ce:c8ff:fea2:6d18/128 => e4:5f:01:f2:1e:23 0
+table_add MyIngress.ipv6_lpm MyIngress.forward fe80::224:9bff:fe80:7835/128 => e4:5f:01:f2:1f:01 1
+table_add MyIngress.ndp_responder MyIngress.ndp_adv 1::2:3:4:5 => aa:00:aa:00:aa:00
+table_add MyIngress.ndp_responder MyIngress.ndp_adv fe80::a2ce:c8ff:fea2:6d18 => e4:5f:01:f2:1e:23
+table_add MyIngress.ndp_responder MyIngress.ndp_adv fe80::224:9bff:fe80:7835 => e4:5f:01:f2:1f:01
