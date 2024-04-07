@@ -8,8 +8,8 @@ const bit<16> TYPE_IPV6 = 0x86DD;
 *********************** H E A D E R S  ***********************************
 *************************************************************************/
 
-typedef bit<9>  egressSpec_t;
-typedef bit<48> macAddr_t;
+typedef bit<9>   egressSpec_t;
+typedef bit<48>  macAddr_t;
 typedef bit<128> ip6Addr_t;
 
 header ethernet_t {
