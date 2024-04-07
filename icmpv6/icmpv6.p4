@@ -105,7 +105,7 @@ parser MyParser(packet_in packet,
 control MyVerifyChecksum(inout headers hdr, inout metadata meta) {   
     apply {  
         verify_checksum(
-            hdr.icmpv6.isValid(),
+            (hdr.ipv6.isValid() && hdr.icmpv6.isValid() && hdr.echo.isValid()),
             {
                 hdr.ipv6.srcAddr,
                 hdr.ipv6.dstAddr,
@@ -232,7 +232,7 @@ control MyEgress(inout headers hdr,
 control MyComputeChecksum(inout headers hdr, inout metadata meta) {
      apply {
         update_checksum(
-            hdr.icmpv6.isValid(),
+            (hdr.ipv6.isValid() && hdr.icmpv6.isValid() && hdr.echo.isValid()),
             {
                 hdr.ipv6.srcAddr,
                 hdr.ipv6.dstAddr,
