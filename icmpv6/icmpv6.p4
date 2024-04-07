@@ -12,9 +12,12 @@ const bit<8>  TYPE_TIME_EXC = 0x3;
 *********************** H E A D E R S  ***********************************
 *************************************************************************/
 
-typedef bit<9> egressSpec_t;
-typedef bit<48> macAddr_t;
+typedef bit<9>   egressSpec_t;
+typedef bit<48>  macAddr_t;
 typedef bit<128> ip6Addr_t;
+
+const ip6Addr_t IPr = 0x00010000000000000002000300040005;
+const macAddr_t MACr = 0xaa00aa00aa00;
 
 header ethernet_t {
     macAddr_t   dstAddr;
@@ -165,7 +168,7 @@ control MyIngress(inout headers hdr,
         default_action = drop();
 
         const entries = {
-            (0xaa00aa00aa00, 0x00010000000000000002000300040005): echo_reply;
+            (MACr, IPr): echo_reply;
         }
     }
 
@@ -181,11 +184,11 @@ control MyIngress(inout headers hdr,
         hdr.echo.data = ipv6_datagram ++ icmpv6_datagram ++ echo_datagram[479:384];
 
         hdr.ipv6.dstAddr = hdr.ipv6.srcAddr;
-        hdr.ipv6.srcAddr = 0x00010000000000000002000300040005;
+        hdr.ipv6.srcAddr = IPr;
         hdr.ipv6.hopLimit = 255;
 
         hdr.ethernet.dstAddr = hdr.ethernet.srcAddr;
-        hdr.ethernet.srcAddr = 0xaa00aa00aa00;
+        hdr.ethernet.srcAddr = MACr;
 
         standard_metadata.egress_port = standard_metadata.ingress_port; 
     }
