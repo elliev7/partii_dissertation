@@ -75,23 +75,23 @@ parser MyParser(packet_in packet,
     state parse_ethernet {
         packet.extract(hdr.ethernet);
         transition select(hdr.ethernet.etherType) {
-          TYPE_IPV6: parse_ipv6;
+            TYPE_IPV6: parse_ipv6;
         }
         
     }
 
     state parse_ipv6 {
-      packet.extract(hdr.ipv6);
-      transition select(hdr.ipv6.nextHeader) {
-        TYPE_ICMPV6: parse_icmpv6;
-      }
+        packet.extract(hdr.ipv6);
+        transition select(hdr.ipv6.nextHeader) {
+            TYPE_ICMPV6: parse_icmpv6;
+        }
     }
 
     state parse_icmpv6 {
-      packet.extract(hdr.icmpv6);
-      transition select(hdr.icmpv6.type) {
-        TYPE_ECHO_REQ: parse_echo;
-      }
+        packet.extract(hdr.icmpv6);
+        transition select(hdr.icmpv6.type) {
+            TYPE_ECHO_REQ: parse_echo;
+        }
     }
 
     state parse_echo {

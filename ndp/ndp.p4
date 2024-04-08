@@ -84,22 +84,22 @@ parser MyParser(packet_in packet,
     }
 
     state parse_ipv6 {
-      packet.extract(hdr.ipv6);
-      transition select(hdr.ipv6.nextHeader) {
-        TYPE_ICMPV6: parse_icmpv6;
-      }
+        packet.extract(hdr.ipv6);
+        transition select(hdr.ipv6.nextHeader) {
+            TYPE_ICMPV6: parse_icmpv6;
+        }
     }
 
     state parse_icmpv6 {
-      packet.extract(hdr.icmpv6);
-      transition select(hdr.icmpv6.type) {
-        TYPE_NDP_SOL: parse_ndp;
-      }
+        packet.extract(hdr.icmpv6);
+        transition select(hdr.icmpv6.type) {
+            TYPE_NDP_SOL: parse_ndp;
+        }
     }
 
     state parse_ndp {
-      packet.extract(hdr.ndp);
-      transition accept;
+        packet.extract(hdr.ndp);
+        transition accept;
     }
 
 }
