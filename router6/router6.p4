@@ -214,7 +214,7 @@ control MyIngress(inout headers hdr,
 
     action time_exceeded() {
         bit<320> ipv6_datagram = hdr.ipv6.version ++ hdr.ipv6.trafficClass ++ hdr.ipv6.flowLabel ++ hdr.ipv6.payloadLen ++ hdr.ipv6.nextHeader ++ hdr.ipv6.hopLimit ++ hdr.ipv6.srcAddr ++ hdr.ipv6.dstAddr;
-        bit<32> icmpv6_datagram = hdr.icmpv6.type ++ hdr.icmpv6.code ++ hdr.icmpv6.checksum;
+        bit<32>  icmpv6_datagram = hdr.icmpv6.type ++ hdr.icmpv6.code ++ hdr.icmpv6.checksum;
         bit<480> echo_datagram = hdr.message.echo.identifier ++ hdr.message.echo.seqNum ++ hdr.message.echo.data;
 
         hdr.icmpv6.type = TYPE_TIME_EXC;
@@ -294,13 +294,8 @@ control MyIngress(inout headers hdr,
         if (hdr.ipv6.isValid()) {
             if(hdr.ipv6.hopLimit > 1) {
                 if (hdr.ipv6.nextHeader == TYPE_ICMPV6 && hdr.icmpv6.isValid()) {
-                    if (hdr.icmpv6.type == TYPE_ECHO_REQ) {
-                        if (hdr.ipv6.dstAddr == IPr) {
-                            echo_responder.apply();
-                        }
-                        else {
-                            ipv6_lpm.apply();
-                        }
+                    if (hdr.icmpv6.type == TYPE_ECHO_REQ && hdr.ipv6.dstAddr == IPr) {
+                        echo_responder.apply();
                     }
                     else if (hdr.icmpv6.type == TYPE_NDP_SOL) {
                         ndp_responder.apply();
