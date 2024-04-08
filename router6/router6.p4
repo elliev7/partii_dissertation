@@ -2,13 +2,13 @@
 #include <core.p4>
 #include <v1model.p4>
 
-const bit<16> TYPE_IPV6 = 0x86DD;
-const bit<8>  TYPE_ICMPV6 = 0x3A;
+const bit<16> TYPE_IPV6     = 0x86DD;
+const bit<8>  TYPE_ICMPV6   = 0x3A;
 const bit<8>  TYPE_ECHO_REQ = 0x80;
 const bit<8>  TYPE_ECHO_REP = 0x81;
 const bit<8>  TYPE_TIME_EXC = 0x3;
-const bit<8>  TYPE_NDP_SOL = 0x87;
-const bit<8>  TYPE_NDP_ADV = 0x88;
+const bit<8>  TYPE_NDP_SOL  = 0x87;
+const bit<8>  TYPE_NDP_ADV  = 0x88;
 
 /*************************************************************************
 *********************** H E A D E R S  ***********************************
@@ -18,7 +18,7 @@ typedef bit<9>   egressSpec_t;
 typedef bit<48>  macAddr_t;
 typedef bit<128> ip6Addr_t;
 
-const ip6Addr_t IPr = 0x00010000000000000002000300040005;
+const ip6Addr_t IPr  = 0x00010000000000000002000300040005;
 const macAddr_t MACr = 0xaa00aa00aa00;
 
 header ethernet_t {
@@ -189,10 +189,11 @@ control MyIngress(inout headers hdr,
     }
 
     action forward(macAddr_t dstAddr, egressSpec_t port) {
-        standard_metadata.egress_spec = port;
         hdr.ethernet.srcAddr = hdr.ethernet.dstAddr;
         hdr.ethernet.dstAddr = dstAddr;
         hdr.ipv6.hopLimit = hdr.ipv6.hopLimit - 1;
+
+        standard_metadata.egress_spec = port;
     }
 
     action echo_reply() {
@@ -258,7 +259,6 @@ control MyIngress(inout headers hdr,
         actions = {
             forward;
             drop;
-            NoAction;
         }
         default_action = drop();
     }
@@ -271,7 +271,6 @@ control MyIngress(inout headers hdr,
         actions = {
             echo_reply;
             drop;
-            NoAction;
         }
         default_action = drop();
 
@@ -287,7 +286,6 @@ control MyIngress(inout headers hdr,
         actions = {
             ndp_adv;
             drop;
-            NoAction;
         }
         default_action = drop();
     }

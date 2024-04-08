@@ -85,10 +85,11 @@ control MyIngress(inout headers hdr,
     }
 
     action forward(macAddr_t dstAddr, egressSpec_t port) {
-        standard_metadata.egress_spec = port;
         hdr.ethernet.srcAddr = hdr.ethernet.dstAddr;
         hdr.ethernet.dstAddr = dstAddr;
         hdr.ipv6.hopLimit = hdr.ipv6.hopLimit - 1;
+
+        standard_metadata.egress_spec = port;
     }
 
     table ipv6_lpm {
