@@ -163,7 +163,6 @@ control MyIngress(inout headers hdr,
         actions = {
             echo_reply;
             drop;
-            NoAction;
         }
         default_action = drop();
 

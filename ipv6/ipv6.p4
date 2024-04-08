@@ -98,7 +98,6 @@ control MyIngress(inout headers hdr,
         actions = {
             forward;
             drop;
-            NoAction;
         }
         default_action = drop();
     }
