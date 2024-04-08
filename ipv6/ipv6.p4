@@ -104,13 +104,8 @@ control MyIngress(inout headers hdr,
     }
 
     apply {
-        if (hdr.ipv6.isValid()) {
-            if(hdr.ipv6.hopLimit > 1) {
-                ipv6_lpm.apply();
-            }
-            else {
-                drop();
-            }
+        if (hdr.ipv6.isValid() && hdr.ipv6.hopLimit > 1) {
+            ipv6_lpm.apply();
         }
         else {
             drop();

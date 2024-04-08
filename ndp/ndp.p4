@@ -179,26 +179,11 @@ control MyIngress(inout headers hdr,
     }
 
     apply {
-        if (hdr.ipv6.isValid()) {
-            if (hdr.ipv6.hopLimit > 1) {            
-                if (hdr.icmpv6.isValid()) {
-                    if (hdr.icmpv6.type == TYPE_NDP_SOL) {
-                        ndp_responder.apply();
-                    }
-                    else {
-                        drop();
-                    }
-                }
-                else {
-                    drop();
-                }
-            }
-            else {
-                drop();
-            }
+        if (hdr.ipv6.isValid() && hdr.ipv6.hopLimit > 1 && hdr.icmpv6.isValid() && hdr.icmpv6.type == TYPE_NDP_SOL) {
+            ndp_responder.apply();
         }
         else {
-          drop();       
+            drop();
         }
     }
 }

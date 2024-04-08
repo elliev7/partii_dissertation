@@ -196,13 +196,8 @@ control MyIngress(inout headers hdr,
     apply {
         if (hdr.ipv6.isValid()) {
             if (hdr.ipv6.hopLimit > 1) {            
-                if (hdr.icmpv6.isValid()) {
-                    if (hdr.icmpv6.type == TYPE_ECHO_REQ) {
-                        echo_responder.apply();
-                    }
-                    else {
-                        drop();
-                    }
+                if (hdr.icmpv6.isValid() && hdr.icmpv6.type == TYPE_ECHO_REQ) {
+                    echo_responder.apply();
                 }
                 else {
                     drop();
