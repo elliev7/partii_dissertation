@@ -92,7 +92,6 @@ parser MyParser(packet_in packet,
         transition select(hdr.ethernet.etherType) {
             TYPE_ARP: parse_arp;
             TYPE_IPV4: parse_ipv4;
-            default: accept;
         }
     }
 
@@ -100,12 +99,12 @@ parser MyParser(packet_in packet,
         packet.extract(hdr.arp);
         transition select(hdr.arp.op_code) {
             TYPE_ARP_REQ: accept;
-      }
+        }
     }
 
     state parse_ipv4 {
         packet.extract(hdr.ipv4);
-        transition select(hdr.ipv4.protocol){
+        transition select(hdr.ipv4.protocol) {
             TYPE_ICMP: parse_icmp;
             default: accept;
         }
