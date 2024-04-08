@@ -112,6 +112,7 @@ parser MyParser(packet_in packet,
       transition select(hdr.icmpv6.type) {
         TYPE_ECHO_REQ: parse_echo;
         TYPE_NDP_SOL: parse_ndp;
+        default: accept;
       }
     }
 

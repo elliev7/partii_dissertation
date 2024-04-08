@@ -152,7 +152,7 @@ control MyIngress(inout headers hdr,
         hdr.ethernet.srcAddr = hdr.ethernet.dstAddr;
         hdr.ethernet.dstAddr = tmp_mac;
 
-        standard_metadata.egress_port = standard_metadata.ingress_port;
+        standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
     
     table echo_responder {
@@ -190,7 +190,7 @@ control MyIngress(inout headers hdr,
         hdr.ethernet.dstAddr = hdr.ethernet.srcAddr;
         hdr.ethernet.srcAddr = MACr;
 
-        standard_metadata.egress_port = standard_metadata.ingress_port; 
+        standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
     apply {
