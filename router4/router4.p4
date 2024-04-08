@@ -6,7 +6,7 @@ const bit<16> TYPE_IPV4     = 0x0800;
 const bit<16> TYPE_ARP      = 0x0806;
 const bit<16> TYPE_ARP_REQ  = 0x0001;
 const bit<16> TYPE_ARP_REP  = 0x0002;
-const bit<8>  PROTO_ICMP    = 0x01;
+const bit<8>  TYPE_ICMP     = 0x01;
 const bit<8>  TYPE_ECHO_REQ = 0x08;
 const bit<8>  TYPE_ECHO_REP = 0x00;
 
@@ -106,7 +106,7 @@ parser MyParser(packet_in packet,
     state parse_ipv4 {
         packet.extract(hdr.ipv4);
         transition select(hdr.ipv4.protocol){
-            PROTO_ICMP: parse_icmp;
+            TYPE_ICMP: parse_icmp;
             default: accept;
         }
     }
