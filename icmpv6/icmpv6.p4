@@ -2,8 +2,8 @@
 #include <core.p4>
 #include <v1model.p4>
 
-const bit<16> TYPE_IPV6 = 0x86DD;
-const bit<8>  TYPE_ICMPV6 = 0x3A;
+const bit<16> TYPE_IPV6     = 0x86DD;
+const bit<8>  TYPE_ICMPV6   = 0x3A;
 const bit<8>  TYPE_ECHO_REQ = 0x80;
 const bit<8>  TYPE_ECHO_REP = 0x81;
 const bit<8>  TYPE_TIME_EXC = 0x3;
@@ -16,7 +16,7 @@ typedef bit<9>   egressSpec_t;
 typedef bit<48>  macAddr_t;
 typedef bit<128> ip6Addr_t;
 
-const ip6Addr_t IPr = 0x00010000000000000002000300040005;
+const ip6Addr_t IPr  = 0x00010000000000000002000300040005;
 const macAddr_t MACr = 0xaa00aa00aa00;
 
 header ethernet_t {
