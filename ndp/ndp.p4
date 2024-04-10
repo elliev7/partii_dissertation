@@ -11,12 +11,14 @@ const bit<8>  TYPE_NDP_ADV = 0x88;
 *********************** H E A D E R S  ***********************************
 *************************************************************************/
 
-typedef bit<9>   egressSpec_t;
+typedef bit<9>   ingressSpect_t;
 typedef bit<48>  macAddr_t;
 typedef bit<128> ip6Addr_t;
 
-const ip6Addr_t IPr  = 0x00010000000000000002000300040005;
-const macAddr_t MACr = 0xaa00aa00aa00;
+const ip6Addr_t IPr1  = 0xfe80000000000000a2cec8fffea20000;
+const macAddr_t MACr1 = 0xa0cec8a26d15;
+const ip6Addr_t IPr2  = 0xfe8000000000000002249bfffe800000;
+const macAddr_t MACr2 = 0x00249b807838;
 
 header ethernet_t {
     macAddr_t   dstAddr;
@@ -147,7 +149,7 @@ control MyIngress(inout headers hdr,
     }
     
 
-    action ndp_adv(macAddr_t llAddr) {
+    action ndp_adv(macAddr_t llAddr, ingressSpect_t src) {
         hdr.icmpv6.type = TYPE_NDP_ADV;
         hdr.icmpv6.checksum = 0;
         hdr.ndp.rFlag = 1;
@@ -157,11 +159,17 @@ control MyIngress(inout headers hdr,
         hdr.ndp.llAddr = llAddr;
 
         hdr.ipv6.dstAddr = hdr.ipv6.srcAddr;
-        hdr.ipv6.srcAddr = IPr;
         hdr.ipv6.hopLimit = 255;
-
         hdr.ethernet.dstAddr = hdr.ethernet.srcAddr;
-        hdr.ethernet.srcAddr = MACr;
+
+        if(src == 1){
+            hdr.ipv6.srcAddr = IPr1;
+            hdr.ethernet.srcAddr = MACr1;
+        }
+        else {
+            hdr.ipv6.srcAddr = IPr2;
+            hdr.ethernet.srcAddr = MACr2;
+        }
 
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }

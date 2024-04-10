@@ -1,1 +1,4 @@
-table_add MyIngress.ndp_responder MyIngress.ndp_adv 1::2:3:4:5 => aa:00:aa:00:aa:00
+table_add MyIngress.ndp_responder MyIngress.ndp_adv fe80::a2ce:c8ff:fea2:1 => e4:5f:01:f2:1e:23 1
+table_add MyIngress.ndp_responder MyIngress.ndp_adv fe80::224:9bff:fe80:2 => e4:5f:01:f2:1f:01 2
+table_add MyIngress.ndp_responder MyIngress.ndp_adv fe80::a2ce:c8ff:fea2:0 => a0:ce:c8:a2:6d:15 1
+table_add MyIngress.ndp_responder MyIngress.ndp_adv fe80::224:9bff:fe80:0 => 00:24:9b:80:78:38 2
