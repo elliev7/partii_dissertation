@@ -78,8 +78,7 @@ parser MyParser(packet_in packet,
         packet.extract(hdr.ethernet);
         transition select(hdr.ethernet.etherType) {
             TYPE_IPV6: parse_ipv6;
-        }
-        
+        }   
     }
 
     state parse_ipv6 {
