@@ -140,7 +140,6 @@ control MyIngress(inout headers hdr,
         mark_to_drop(standard_metadata);
     }
     
-
     action echo_reply() {
         hdr.icmpv6.type = TYPE_ECHO_REP;
         hdr.icmpv6.checksum = 0;
@@ -272,7 +271,6 @@ control MyComputeChecksum(inout headers hdr, inout metadata meta) {
         );
     }
 }
-
 
 /*************************************************************************
 ***********************  D E P A R S E R  *******************************
