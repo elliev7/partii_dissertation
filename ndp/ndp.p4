@@ -146,8 +146,7 @@ control MyIngress(inout headers hdr,
                   inout standard_metadata_t standard_metadata) {
     action drop() {
         mark_to_drop(standard_metadata);
-    }
-    
+    }  
 
     action ndp_adv(macAddr_t llAddr, ingressSpect_t src) {
         hdr.icmpv6.type = TYPE_NDP_ADV;
@@ -235,7 +234,6 @@ control MyComputeChecksum(inout headers hdr, inout metadata meta) {
         );
     }
 }
-
 
 /*************************************************************************
 ***********************  D E P A R S E R  *******************************
