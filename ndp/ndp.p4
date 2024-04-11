@@ -11,7 +11,7 @@ const bit<8>  TYPE_NDP_ADV = 0x88;
 *********************** H E A D E R S  ***********************************
 *************************************************************************/
 
-typedef bit<9>   ingressSpect_t;
+typedef bit<9>   ingressSpec_t;
 typedef bit<48>  macAddr_t;
 typedef bit<128> ip6Addr_t;
 
@@ -148,7 +148,7 @@ control MyIngress(inout headers hdr,
         mark_to_drop(standard_metadata);
     }  
 
-    action ndp_adv(macAddr_t llAddr, ingressSpect_t src) {
+    action ndp_adv(macAddr_t llAddr, ingressSpec_t src) {
         hdr.icmpv6.type = TYPE_NDP_ADV;
         hdr.icmpv6.checksum = 0;
         hdr.ndp.rFlag = 1;

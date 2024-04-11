@@ -12,7 +12,7 @@ const bit<8>  TYPE_TIME_EXC = 0x3;
 *********************** H E A D E R S  ***********************************
 *************************************************************************/
 
-typedef bit<9>   ingressSpect_t;
+typedef bit<9>   ingressSpec_t;
 typedef bit<48>  macAddr_t;
 typedef bit<128> ip6Addr_t;
 
@@ -155,7 +155,7 @@ control MyIngress(inout headers hdr,
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
-    action time_exceeded(ingressSpect_t src) {
+    action time_exceeded(ingressSpec_t src) {
         bit<320> ipv6_datagram = hdr.ipv6.version ++ hdr.ipv6.trafficClass ++ hdr.ipv6.flowLabel ++ hdr.ipv6.payloadLen ++ hdr.ipv6.nextHeader ++ hdr.ipv6.hopLimit ++ hdr.ipv6.srcAddr ++ hdr.ipv6.dstAddr;
         bit<32> icmpv6_datagram = hdr.icmpv6.type ++ hdr.icmpv6.code ++ hdr.icmpv6.checksum;
         bit<480> echo_datagram = hdr.echo.identifier ++ hdr.echo.seqNum ++ hdr.echo.data;
