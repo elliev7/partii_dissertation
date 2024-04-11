@@ -201,7 +201,7 @@ control MyIngress(inout headers hdr,
 
     table time_exceeded_responder {
         key = {
-            hdr.ipv6.srcAddr: lpm;
+            hdr.ipv6.srcAddr[127:16]: lpm;
         }
         actions = {
             time_exceeded;
@@ -210,8 +210,8 @@ control MyIngress(inout headers hdr,
         default_action = time_exceeded(1);
 
         const entries = {
-            (IPr1): time_exceeded(1);
-            (IPr2): time_exceeded(2);
+            IPr1[127:16]: time_exceeded(1);
+            IPr2[127:16]: time_exceeded(2);
         }
     }
 
