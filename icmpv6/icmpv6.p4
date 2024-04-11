@@ -8,6 +8,10 @@ const bit<8>  TYPE_ECHO_REQ = 0x80;
 const bit<8>  TYPE_ECHO_REP = 0x81;
 const bit<8>  TYPE_TIME_EXC = 0x3;
 
+typedef bit<9>   ingressSpec_t;
+typedef bit<48>  macAddr_t;
+typedef bit<128> ip6Addr_t;
+
 const ip6Addr_t IPr1  = 0xfe80000000000000a2cec8fffea20000;
 const macAddr_t MACr1 = 0xa0cec8a26d15;
 const ip6Addr_t IPr2  = 0xfe8000000000000002249bfffe800000;
@@ -16,10 +20,6 @@ const macAddr_t MACr2 = 0x00249b807838;
 /*************************************************************************
 *********************** H E A D E R S  ***********************************
 *************************************************************************/
-
-typedef bit<9>   ingressSpec_t;
-typedef bit<48>  macAddr_t;
-typedef bit<128> ip6Addr_t;
 
 header ethernet_t {
     macAddr_t   dstAddr;
@@ -100,7 +100,6 @@ parser MyParser(packet_in packet,
         transition accept;
     }
 }
-
 
 /*************************************************************************
 ************   C H E C K S U M    V E R I F I C A T I O N   *************

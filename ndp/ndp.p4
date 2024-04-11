@@ -7,6 +7,10 @@ const bit<8>  TYPE_ICMPV6  = 0x3A;
 const bit<8>  TYPE_NDP_SOL = 0x87;
 const bit<8>  TYPE_NDP_ADV = 0x88;
 
+typedef bit<9>   ingressSpec_t;
+typedef bit<48>  macAddr_t;
+typedef bit<128> ip6Addr_t;
+
 const ip6Addr_t IPr1  = 0xfe80000000000000a2cec8fffea20000;
 const macAddr_t MACr1 = 0xa0cec8a26d15;
 const ip6Addr_t IPr2  = 0xfe8000000000000002249bfffe800000;
@@ -15,10 +19,6 @@ const macAddr_t MACr2 = 0x00249b807838;
 /*************************************************************************
 *********************** H E A D E R S  ***********************************
 *************************************************************************/
-
-typedef bit<9>   ingressSpec_t;
-typedef bit<48>  macAddr_t;
-typedef bit<128> ip6Addr_t;
 
 header ethernet_t {
     macAddr_t   dstAddr;
