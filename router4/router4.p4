@@ -117,7 +117,6 @@ parser MyParser(packet_in packet,
         packet.extract(hdr.icmp);
         transition accept;
     }
-
 }
 
 /*************************************************************************
@@ -175,6 +174,7 @@ control MyIngress(inout headers hdr,
         hdr.arp.op_code = TYPE_ARP_REP;
         hdr.arp.dst_mac = hdr.arp.src_mac;
         hdr.arp.src_mac = request_mac;
+        
         bit<32> tmp_ip = hdr.arp.src_ip;
         hdr.arp.src_ip = hdr.arp.dst_ip;
         hdr.arp.dst_ip = tmp_ip;
@@ -253,12 +253,12 @@ control MyIngress(inout headers hdr,
             arp_responder.apply();
         }
         else if (hdr.ipv4.isValid() && hdr.ipv4.ttl > 1) {
-                if (hdr.icmp.isValid() && hdr.icmp.type == TYPE_ECHO_REQ && (hdr.ipv4.dstAddr == IPr1 || hdr.ipv4.dstAddr == IPr2)){
-                    echo_responder.apply();
-                }
-                else {
-                    ipv4_lpm.apply();
-                }
+            if (hdr.icmp.isValid() && hdr.icmp.type == TYPE_ECHO_REQ && (hdr.ipv4.dstAddr == IPr1 || hdr.ipv4.dstAddr == IPr2)){
+                echo_responder.apply();
+            }
+            else {
+                ipv4_lpm.apply();
+            }
         }
         else {
             drop();
@@ -300,7 +300,6 @@ control MyComputeChecksum(inout headers  hdr, inout metadata meta) {
             hdr.ipv4.hdrChecksum,
             HashAlgorithm.csum16
         );
-
         update_checksum(
             hdr.icmp.isValid(),
             {
