@@ -103,7 +103,6 @@ parser MyParser(packet_in packet,
         packet.extract(hdr.ndp);
         transition accept;
     }
-
 }
 
 /*************************************************************************
