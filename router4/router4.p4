@@ -10,16 +10,19 @@ const bit<8>  TYPE_ICMP     = 0x01;
 const bit<8>  TYPE_ECHO_REQ = 0x08;
 const bit<8>  TYPE_ECHO_REP = 0x00;
 
-/*************************************************************************
-*********************** H E A D E R S  ***********************************
-*************************************************************************/
-
+typedef bit<9>   ingressSpec_t;
 typedef bit<9>   egressSpec_t;
 typedef bit<48>  macAddr_t;
 typedef bit<32>  ip4Addr_t;
 
-const ip4Addr_t IPr  = 0x0102032d;
-const macAddr_t MACr = 0xaa00aa00aa00;
+const ip4Addr_t IPr1  = 0xa9fe0900;
+const macAddr_t MACr1 = 0xa0cec8a26d15;
+const ip4Addr_t IPr2  = 0xa9febc00;
+const macAddr_t MACr2 = 0x00249b807838;
+
+/*************************************************************************
+*********************** H E A D E R S  ***********************************
+*************************************************************************/
 
 header ethernet_t {
     macAddr_t   dstAddr;
@@ -141,7 +144,6 @@ control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
             hdr.ipv4.hdrChecksum,
             HashAlgorithm.csum16
         );
-
         verify_checksum(
             hdr.icmp.isValid(),
             {
@@ -158,7 +160,6 @@ control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
     }
 }
 
-
 /*************************************************************************
 **************  I N G R E S S   P R O C E S S I N G   *******************
 *************************************************************************/
@@ -174,7 +175,9 @@ control MyIngress(inout headers hdr,
         hdr.arp.op_code = TYPE_ARP_REP;
         hdr.arp.dst_mac = hdr.arp.src_mac;
         hdr.arp.src_mac = request_mac;
+        bit<32> tmp_ip = hdr.arp.src_ip;
         hdr.arp.src_ip = hdr.arp.dst_ip;
+        hdr.arp.dst_ip = tmp_ip;
 
         hdr.ethernet.dstAddr = hdr.ethernet.srcAddr;
         hdr.ethernet.srcAddr = request_mac;
@@ -240,7 +243,8 @@ control MyIngress(inout headers hdr,
         default_action = drop();
 
         const entries = {
-            (MACr, IPr): echo_reply;
+            (MACr1, IPr1): echo_reply;
+            (MACr2, IPr2): echo_reply;
         }
     }
 
@@ -249,7 +253,7 @@ control MyIngress(inout headers hdr,
             arp_responder.apply();
         }
         else if (hdr.ipv4.isValid() && hdr.ipv4.ttl > 1) {
-                if (hdr.icmp.isValid() && hdr.icmp.type == TYPE_ECHO_REQ && hdr.ipv4.dstAddr == IPr){
+                if (hdr.icmp.isValid() && hdr.icmp.type == TYPE_ECHO_REQ && (hdr.ipv4.dstAddr == IPr1 || hdr.ipv4.dstAddr == IPr2)){
                     echo_responder.apply();
                 }
                 else {
