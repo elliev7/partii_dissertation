@@ -4,8 +4,16 @@
 
 const bit<16> TYPE_IPV6    = 0x86DD;
 const bit<8>  TYPE_ICMPV6  = 0x3A;
-const bit<8>  TYPE_NDP_SOL = 0x87;
-const bit<8>  TYPE_NDP_ADV = 0x88;
+const bit<8>  TYPE_UDP     = 0x11;
+const bit<8>  TYPE_TCP     = 0x06;
+
+const bit<8>  TYPE_MC_REP  = 0x83;
+const bit<8>  TYPE_MC_DONE = 0x84;
+const bit<8>  TYPE_ROU_SOL = 0x85;
+const bit<8>  TYPE_ROU_ADV = 0x86;
+const bit<8>  TYPE_NEI_SOL = 0x87;
+const bit<8>  TYPE_NEI_ADV = 0x88;
+const bit<8>  TYPE_REDIR   = 0x89;
 
 typedef bit<9>   ingressSpec_t;
 typedef bit<48>  macAddr_t;
@@ -73,7 +81,6 @@ parser MyParser(packet_in packet,
                 out headers hdr,
                 inout metadata meta,
                 inout standard_metadata_t standard_metadata) {
-
     state start {
         transition parse_ethernet;
     }
@@ -95,7 +102,7 @@ parser MyParser(packet_in packet,
     state parse_icmpv6 {
         packet.extract(hdr.icmpv6);
         transition select(hdr.icmpv6.type) {
-            TYPE_NDP_SOL: parse_ndp;
+            TYPE_NEI_SOL: parse_ndp;
         }
     }
 
@@ -109,7 +116,8 @@ parser MyParser(packet_in packet,
 ************   C H E C K S U M    V E R I F I C A T I O N   *************
 *************************************************************************/
 
-control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
+control MyVerifyChecksum(inout headers hdr, 
+                         inout metadata meta) {
     apply {  
         verify_checksum(
             (hdr.ipv6.isValid() && hdr.icmpv6.isValid() && hdr.ndp.isValid()),
@@ -147,8 +155,8 @@ control MyIngress(inout headers hdr,
         mark_to_drop(standard_metadata);
     }  
 
-    action ndp_adv(macAddr_t llAddr, ingressSpec_t src) {
-        hdr.icmpv6.type = TYPE_NDP_ADV;
+    action nei_adv(macAddr_t llAddr, ingressSpec_t src) {
+        hdr.icmpv6.type = TYPE_NEI_ADV;
         hdr.icmpv6.checksum = 0;
         hdr.ndp.rFlag = 1;
         hdr.ndp.sFlag = 1;
@@ -172,12 +180,12 @@ control MyIngress(inout headers hdr,
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
     
-    table ndp_responder {
+    table nei_responder {
         key = {
             hdr.ndp.trgAddr: exact;
         }
         actions = {
-            ndp_adv;
+            nei_adv;
             drop;
         }
         default_action = drop();
@@ -187,8 +195,8 @@ control MyIngress(inout headers hdr,
         if(hdr.ipv6.isValid()) {
             if(hdr.ipv6.hopLimit > 1) {
                 if(hdr.icmpv6.isValid()) {
-                    if (hdr.icmpv6.type == TYPE_NDP_SOL) {
-                        ndp_responder.apply();
+                    if (hdr.icmpv6.type == TYPE_NEI_SOL) {
+                        nei_responder.apply();
                     }
                     else {
                         drop();
@@ -222,7 +230,8 @@ control MyEgress(inout headers hdr,
 *************   C H E C K S U M    C O M P U T A T I O N   **************
 *************************************************************************/
 
-control MyComputeChecksum(inout headers hdr, inout metadata meta) {
+control MyComputeChecksum(inout headers hdr, 
+                          inout metadata meta) {
      apply {
         update_checksum(
             (hdr.ipv6.isValid() && hdr.icmpv6.isValid() && hdr.ndp.isValid()),
@@ -253,7 +262,8 @@ control MyComputeChecksum(inout headers hdr, inout metadata meta) {
 ***********************  D E P A R S E R  *******************************
 *************************************************************************/
 
-control MyDeparser(packet_out packet, in headers hdr) {
+control MyDeparser(packet_out packet, 
+                   in headers hdr) {
     apply {
         packet.emit(hdr.ethernet);
         packet.emit(hdr.ipv6);

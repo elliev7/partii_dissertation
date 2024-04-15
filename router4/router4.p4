@@ -2,19 +2,26 @@
 #include <core.p4>
 #include <v1model.p4>
 
-const bit<16> TYPE_IPV4     = 0x0800;
 const bit<16> TYPE_ARP      = 0x0806;
+const bit<16> TYPE_IPV4     = 0x0800;
 const bit<8>  TYPE_ICMP     = 0x01;
-const bit<8>  TYPE_ECHO_REQ = 0x08;
-const bit<8>  TYPE_ECHO_REP = 0x00;
+const bit<8>  TYPE_UDP      = 0x11;
+const bit<8>  TYPE_TCP      = 0x06;
 
-// ARP RELATED CONSTS
-const bit<16> ARP_HTYPE = 0x0001;           // Ethernet Hardware type is 1
-const bit<16> ARP_PTYPE = TYPE_IPV4;        // Protocol used for ARP is IPV4
-const bit<8>  ARP_HLEN  = 0x06;             // Ethernet address size is 6 bytes
-const bit<8>  ARP_PLEN  = 0x04;             // IP address size is 4 bytes
-const bit<16> ARP_REQ   = 0x0001;           // Operation 1 is request
-const bit<16> ARP_REPLY = 0x0002;           // Operation 2 is reply
+const bit<16> ARP_HTYPE     = 0x0001;
+const bit<16> ARP_PTYPE     = TYPE_IPV4;
+const bit<8>  ARP_HLEN      = 0x06;
+const bit<8>  ARP_PLEN      = 0x04;
+const bit<16> ARP_REQ       = 0x0001;
+const bit<16> ARP_REPLY     = 0x0002;
+
+const bit<8>  TYPE_ECHO_REP = 0x00;
+const bit<8>  TYPE_DEST_UNR = 0x03;
+const bit<8>  TYPE_REDIR    = 0x05;
+const bit<8>  TYPE_ECHO_REQ = 0x08;
+const bit<8>  TYPE_ROU_ADV  = 0x09;
+const bit<8>  TYPE_ROU_SOL  = 0x0A;
+const bit<8>  TYPE_TIME_EXC = 0x0B;
 
 typedef bit<9>   ingressSpec_t;
 typedef bit<9>   egressSpec_t;
@@ -91,7 +98,6 @@ parser MyParser(packet_in packet,
                 out headers hdr,
                 inout metadata meta,
                 inout standard_metadata_t standard_metadata) {
-
     state start {
         transition parse_ethernet;
     }
@@ -129,7 +135,8 @@ parser MyParser(packet_in packet,
 ************   C H E C K S U M    V E R I F I C A T I O N   *************
 *************************************************************************/
 
-control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
+control MyVerifyChecksum(inout headers hdr, 
+                         inout metadata meta) {
     apply {
         verify_checksum(
             hdr.ipv4.isValid(),
@@ -309,7 +316,8 @@ control MyEgress(inout headers hdr,
 *************   C H E C K S U M    C O M P U T A T I O N   **************
 *************************************************************************/
 
-control MyComputeChecksum(inout headers  hdr, inout metadata meta) {
+control MyComputeChecksum(inout headers  hdr, 
+                          inout metadata meta) {
      apply {
         update_checksum(
             hdr.ipv4.isValid(),
@@ -349,7 +357,8 @@ control MyComputeChecksum(inout headers  hdr, inout metadata meta) {
 ***********************  D E P A R S E R  *******************************
 *************************************************************************/
 
-control MyDeparser(packet_out packet, in headers hdr) {
+control MyDeparser(packet_out packet, 
+                   in headers hdr) {
     apply {
         packet.emit(hdr.ethernet);
         packet.emit(hdr.arp);
