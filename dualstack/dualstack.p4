@@ -109,7 +109,7 @@ header ndp_t {
 
 header_union message_t {
     echo_t  echo;
-    ndp_t ndp;
+    ndp_t   ndp;
 }
 
 struct metadata {
@@ -195,7 +195,6 @@ parser MyParser(packet_in packet,
         packet.extract(hdr.message.ndp);
         transition accept;
     }
-
 }
 
 /*************************************************************************
@@ -274,7 +273,7 @@ control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
             hdr.icmp.checksum,
             HashAlgorithm.csum16
         );
-     }
+    }
 }
 
 /*************************************************************************
@@ -491,25 +490,61 @@ control MyIngress(inout headers hdr,
         if(hdr.arp.isValid()){
             arp_responder.apply();
         }
-        else if (hdr.ip.ipv4.isValid() && hdr.ip.ipv4.ttl > 1) {
-            if (hdr.icmp.isValid() && hdr.icmp.type == TYPE_ECHO_REQ_V4 && (hdr.ip.ipv4.dstAddr == IPV4r1 || hdr.ip.ipv4.dstAddr == IPV4r2)){
-                echo_responder_v4.apply();
-            }
-            else {
-                ipv4_lpm.apply();
-            }
-        }
-        else if (hdr.ip.ipv6.isValid()) {
-            if(hdr.ip.ipv6.hopLimit > 1) {
-                if (hdr.ip.ipv6.nextHeader == TYPE_ICMPV6 && hdr.icmp.isValid()) {
-                    if (hdr.icmp.type == TYPE_ECHO_REQ_V6 && (hdr.ip.ipv6.dstAddr == IPV6r1 || hdr.ip.ipv6.dstAddr == IPV6r2)) {
-                        echo_responder_v6.apply();
-                    }
-                    else if (hdr.icmp.type == TYPE_NDP_SOL) {
-                        ndp_responder.apply();
+        else if(hdr.ip.ipv4.isValid()) {
+            if(hdr.ip.ipv4.ttl > 1) {
+                if(hdr.ip.ipv4.protocol == TYPE_ICMPV4) {
+                    if(hdr.icmp.isValid()) {
+                        if(hdr.icmp.type == TYPE_ECHO_REQ_V4) {
+                            if(hdr.ip.ipv4.dstAddr == IPV4r1) {
+                                echo_responder_v4.apply();
+                            }
+                            else if(hdr.ip.ipv4.dstAddr == IPV4r2) {
+                                echo_responder_v4.apply();
+                            }
+                            else {
+                                ipv4_lpm.apply();
+                            }
+                        }
+                        else {
+                            ipv4_lpm.apply();
+                        }
                     }
                     else {
-                        ipv6_lpm.apply();
+                        ipv4_lpm.apply();
+                    }
+                }
+                else {
+                    ipv4_lpm.apply();
+                }
+            }
+            else {
+                drop();
+            }
+        }
+        else if(hdr.ip.ipv6.isValid()) {
+            if(hdr.ip.ipv6.hopLimit > 1) {
+                if (hdr.ipv6.nextHeader == TYPE_ICMPV6) {
+                    if(hdr.icmp.isValid()) {
+                        if (hdr.icmp.type == TYPE_ECHO_REQ_v6) {
+                            if(hdr.ipv6.dstAddr == IPV6r1) {
+                                echo_responder_v6.apply();
+                            }
+                            else if(hdr.ipv6.dstAddr == IPV6r2) {
+                                echo_responder_v6.apply();
+                            }
+                            else {
+                                ipv6_lpm.apply();
+                            }
+                        }
+                        else if (hdr.icmp.type == TYPE_NDP_SOL) {
+                            ndp_responder.apply();
+                        }
+                        else {
+                            ipv6_lpm.apply();
+                        }
+                    }
+                    else {
+                        ip6_lpm.apply();
                     }
                 }
                 else {

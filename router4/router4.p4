@@ -4,11 +4,17 @@
 
 const bit<16> TYPE_IPV4     = 0x0800;
 const bit<16> TYPE_ARP      = 0x0806;
-const bit<16> TYPE_ARP_REQ  = 0x0001;
-const bit<16> TYPE_ARP_REP  = 0x0002;
 const bit<8>  TYPE_ICMP     = 0x01;
 const bit<8>  TYPE_ECHO_REQ = 0x08;
 const bit<8>  TYPE_ECHO_REP = 0x00;
+
+// ARP RELATED CONSTS
+const bit<16> ARP_HTYPE = 0x0001;           // Ethernet Hardware type is 1
+const bit<16> ARP_PTYPE = TYPE_IPV4;        // Protocol used for ARP is IPV4
+const bit<8>  ARP_HLEN  = 0x06;             // Ethernet address size is 6 bytes
+const bit<8>  ARP_PLEN  = 0x04;             // IP address size is 4 bytes
+const bit<16> ARP_REQ   = 0x0001;           // Operation 1 is request
+const bit<16> ARP_REPLY = 0x0002;           // Operation 2 is reply
 
 typedef bit<9>   ingressSpec_t;
 typedef bit<9>   egressSpec_t;
@@ -252,12 +258,35 @@ control MyIngress(inout headers hdr,
         if(hdr.arp.isValid()){
             arp_responder.apply();
         }
-        else if (hdr.ipv4.isValid() && hdr.ipv4.ttl > 1) {
-            if (hdr.icmp.isValid() && hdr.icmp.type == TYPE_ECHO_REQ && (hdr.ipv4.dstAddr == IPr1 || hdr.ipv4.dstAddr == IPr2)){
-                echo_responder.apply();
+        else if(hdr.ipv4.isValid()) {
+            if(hdr.ipv4.ttl > 1) {
+                if(hdr.ipv4.protocol == TYPE_ICMP){
+                    if(hdr.icmp.isValid()) {
+                        if(hdr.icmp.type == TYPE_ECHO_REQ) {
+                            if(hdr.ipv4.dstAddr == IPr1) {
+                                echo_responder.apply();
+                            }
+                            else if(hdr.ipv4.dstAddr == IPr2) {
+                                echo_responder.apply();
+                            }
+                            else {
+                                ipv4_lpm.apply();
+                            }
+                        }
+                        else {
+                            ipv4_lpm.apply();
+                        }
+                    }
+                    else {
+                        ipv4_lpm.apply();
+                    }
+                }
+                else {
+                    ipv4_lpm.apply();
+                }
             }
             else {
-                ipv4_lpm.apply();
+                drop();
             }
         }
         else {

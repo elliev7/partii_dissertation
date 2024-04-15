@@ -322,15 +322,28 @@ control MyIngress(inout headers hdr,
     apply {
         if (hdr.ipv6.isValid()) {
             if(hdr.ipv6.hopLimit > 1) {
-                if (hdr.ipv6.nextHeader == TYPE_ICMPV6 && hdr.icmpv6.isValid()) {
-                    if (hdr.icmpv6.type == TYPE_ECHO_REQ && (hdr.ipv6.dstAddr == IPr1 || hdr.ipv6.dstAddr == IPr2)) {
-                        echo_responder.apply();
-                    }
-                    else if (hdr.icmpv6.type == TYPE_NDP_SOL) {
-                        ndp_responder.apply();
+                if (hdr.ipv6.nextHeader == TYPE_ICMPV6) {
+                    if(hdr.icmpv6.isValid()) {
+                        if (hdr.icmpv6.type == TYPE_ECHO_REQ) {
+                            if(hdr.ipv6.dstAddr == IPr1) {
+                                echo_responder.apply();
+                            }
+                            else if(hdr.ipv6.dstAddr == IPr2) {
+                                echo_responder.apply();
+                            }
+                            else {
+                                ipv6_lpm.apply();
+                            }
+                        }
+                        else if (hdr.icmpv6.type == TYPE_NDP_SOL) {
+                            ndp_responder.apply();
+                        }
+                        else {
+                            ipv6_lpm.apply();
+                        }
                     }
                     else {
-                        ipv6_lpm.apply();
+                        ip6_lpm.apply();
                     }
                 }
                 else {
