@@ -325,28 +325,17 @@ control MyIngress(inout headers hdr,
         {
             if(hdr.ipv6.hopLimit > 1) 
             {            
-                if(hdr.icmpv6.isValid()) 
+                if(hdr.icmpv6.isValid() && hdr.icmpv6.type == TYPE_ECHO_REQ) 
                 {
-                    if (hdr.icmpv6.type == TYPE_ECHO_REQ) 
-                    {
-                            if(hdr.ipv6.dstAddr == IPr1) 
-                            {
-                                echo_responder.apply();
-                            }
-                            else if(hdr.ipv6.dstAddr == IPr2) 
-                            {
-                                echo_responder.apply();
-                            }
-                            else 
-                            {
-                                destination_unreachable_responder.apply();
-                            }
+                        if(hdr.ipv6.dstAddr == IPr1 || hdr.ipv6.dstAddr == IPr2) 
+                        {
+                            echo_responder.apply();
                         }
-                    else 
-                    {
-                        drop();
+                        else 
+                        {
+                            destination_unreachable_responder.apply();
+                        }
                     }
-                }
                 else 
                 {
                     drop();

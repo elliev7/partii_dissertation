@@ -54,7 +54,7 @@ header icmpv6_t
     bit<16>     checksum;
 }
 
-header ndp_t 
+header nei_t 
 {
     bit<1>      rFlag;
     bit<1>      sFlag;
@@ -76,7 +76,7 @@ struct headers
     ethernet_t  ethernet;
     ipv6_t      ipv6;
     icmpv6_t    icmpv6;
-    ndp_t       ndp;
+    nei_t       nei;
 }
 
 /*************************************************************************
@@ -116,13 +116,13 @@ parser MyParser(packet_in packet,
         packet.extract(hdr.icmpv6);
         transition select(hdr.icmpv6.type) 
         {
-            TYPE_NEI_SOL: parse_ndp;
+            TYPE_NEI_SOL: parse_nei;
         }
     }
 
-    state parse_ndp 
+    state parse_nei 
     {
-        packet.extract(hdr.ndp);
+        packet.extract(hdr.nei);
         transition accept;
     }
 }
@@ -136,7 +136,7 @@ control MyVerifyChecksum(inout headers hdr, inout metadata meta)
     apply 
     {  
         verify_checksum(
-            (hdr.ipv6.isValid() && hdr.icmpv6.isValid() && hdr.ndp.isValid()),
+            (hdr.ipv6.isValid() && hdr.icmpv6.isValid() && hdr.nei.isValid()),
             {
                 hdr.ipv6.srcAddr,
                 hdr.ipv6.dstAddr,
@@ -145,14 +145,14 @@ control MyVerifyChecksum(inout headers hdr, inout metadata meta)
                 hdr.ipv6.nextHeader,
                 hdr.icmpv6.type,
                 hdr.icmpv6.code,
-                hdr.ndp.rFlag,
-                hdr.ndp.sFlag,
-                hdr.ndp.oFlag,
-                hdr.ndp.reserved,
-                hdr.ndp.trgAddr,
-                hdr.ndp.optType,
-                hdr.ndp.optLen,
-                hdr.ndp.llAddr
+                hdr.nei.rFlag,
+                hdr.nei.sFlag,
+                hdr.nei.oFlag,
+                hdr.nei.reserved,
+                hdr.nei.trgAddr,
+                hdr.nei.optType,
+                hdr.nei.optLen,
+                hdr.nei.llAddr
             },
             hdr.icmpv6.checksum,
             HashAlgorithm.csum16
@@ -177,11 +177,11 @@ control MyIngress(inout headers hdr,
     {
         hdr.icmpv6.type = TYPE_NEI_ADV;
         hdr.icmpv6.checksum = 0;
-        hdr.ndp.rFlag = 1;
-        hdr.ndp.sFlag = 1;
-        hdr.ndp.oFlag = 1;
-        hdr.ndp.optType = 0x02;
-        hdr.ndp.llAddr = llAddr;
+        hdr.nei.rFlag = 1;
+        hdr.nei.sFlag = 1;
+        hdr.nei.oFlag = 1;
+        hdr.nei.optType = 0x02;
+        hdr.nei.llAddr = llAddr;
 
         hdr.ipv6.dstAddr = hdr.ipv6.srcAddr;
         hdr.ipv6.hopLimit = 255;
@@ -204,7 +204,7 @@ control MyIngress(inout headers hdr,
     table nei_responder 
     {
         key = {
-            hdr.ndp.trgAddr: exact;
+            hdr.nei.trgAddr: exact;
         }
         actions = {
             nei_adv;
@@ -219,16 +219,9 @@ control MyIngress(inout headers hdr,
         {
             if(hdr.ipv6.hopLimit > 1) 
             {
-                if(hdr.icmpv6.isValid()) 
+                if(hdr.icmpv6.isValid() && hdr.icmpv6.type == TYPE_NEI_SOL) 
                 {
-                    if (hdr.icmpv6.type == TYPE_NEI_SOL) 
-                    {
-                        nei_responder.apply();
-                    }
-                    else 
-                    {
-                        drop();
-                    }
+                    nei_responder.apply();
                 }
                 else 
                 {
@@ -267,7 +260,7 @@ control MyComputeChecksum(inout headers hdr, inout metadata meta)
      apply 
      {
         update_checksum(
-            (hdr.ipv6.isValid() && hdr.icmpv6.isValid() && hdr.ndp.isValid()),
+            (hdr.ipv6.isValid() && hdr.icmpv6.isValid() && hdr.nei.isValid()),
             {
                 hdr.ipv6.srcAddr,
                 hdr.ipv6.dstAddr,
@@ -276,14 +269,14 @@ control MyComputeChecksum(inout headers hdr, inout metadata meta)
                 hdr.ipv6.nextHeader,
                 hdr.icmpv6.type,
                 hdr.icmpv6.code,
-                hdr.ndp.rFlag,
-                hdr.ndp.sFlag,
-                hdr.ndp.oFlag,
-                hdr.ndp.reserved,
-                hdr.ndp.trgAddr,
-                hdr.ndp.optType,
-                hdr.ndp.optLen,
-                hdr.ndp.llAddr
+                hdr.nei.rFlag,
+                hdr.nei.sFlag,
+                hdr.nei.oFlag,
+                hdr.nei.reserved,
+                hdr.nei.trgAddr,
+                hdr.nei.optType,
+                hdr.nei.optLen,
+                hdr.nei.llAddr
             },
             hdr.icmpv6.checksum,
             HashAlgorithm.csum16
@@ -302,7 +295,7 @@ control MyDeparser(packet_out packet, in headers hdr)
         packet.emit(hdr.ethernet);
         packet.emit(hdr.ipv6);
         packet.emit(hdr.icmpv6);
-        packet.emit(hdr.ndp);
+        packet.emit(hdr.nei);
     }
 }
 

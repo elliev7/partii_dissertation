@@ -8,12 +8,12 @@ const bit<8>  TYPE_ICMP     = 0x01;
 const bit<8>  TYPE_UDP      = 0x11;
 const bit<8>  TYPE_TCP      = 0x06;
 
-const bit<16> ARP_HTYPE     = 0x0001;
-const bit<16> ARP_PTYPE     = TYPE_IPV4;
-const bit<8>  ARP_HLEN      = 0x06;
-const bit<8>  ARP_PLEN      = 0x04;
-const bit<16> ARP_REQ       = 0x0001;
-const bit<16> ARP_REPLY     = 0x0002;
+const bit<16> TYPE_ARP_HTYPE    = 0x0001;
+const bit<16> TYPE_ARP_PTYPE    = TYPE_IPV4;
+const bit<8>  TYPE_ARP_HLEN     = 0x06;
+const bit<8>  TYPE_ARP_PLEN     = 0x04;
+const bit<16> TYPE_ARP_REQ      = 0x0001;
+const bit<16> TYPE_ARP_REP      = 0x0002;
 
 const bit<8>  TYPE_ECHO_REP = 0x00;
 const bit<8>  TYPE_DEST_UNR = 0x03;
@@ -37,13 +37,15 @@ const macAddr_t MACr2 = 0x00249b807838;
 *********************** H E A D E R S  ***********************************
 *************************************************************************/
 
-header ethernet_t {
+header ethernet_t 
+{
     macAddr_t   dstAddr;
     macAddr_t   srcAddr;
     bit<16>     etherType;
 }
 
-header arp_t {
+header arp_t 
+{
     bit<16>     h_type;
     bit<16>     p_type;
     bit<8>      h_len;
@@ -55,7 +57,8 @@ header arp_t {
     ip4Addr_t   dst_ip;
 }
 
-header ipv4_t {
+header ipv4_t 
+{
     bit<4>      version;
     bit<4>      ihl;
     bit<8>      diffserv;
@@ -70,7 +73,8 @@ header ipv4_t {
     ip4Addr_t   dstAddr;
 }
 
-header icmp_t {
+header icmp_t 
+{
     bit<8>      type;
     bit<8>      code;
     bit<16>     checksum;
@@ -79,11 +83,13 @@ header icmp_t {
     bit<448>    data;
 }
 
-struct metadata {
+struct metadata 
+{
     /* empty */
 }
 
-struct headers {
+struct headers 
+{
     ethernet_t   ethernet;
     arp_t        arp;
     ipv4_t       ipv4;
@@ -97,35 +103,44 @@ struct headers {
 parser MyParser(packet_in packet,
                 out headers hdr,
                 inout metadata meta,
-                inout standard_metadata_t standard_metadata) {
-    state start {
+                inout standard_metadata_t standard_metadata) 
+{
+    state start 
+    {
         transition parse_ethernet;
     }
 
-    state parse_ethernet {
+    state parse_ethernet 
+    {
         packet.extract(hdr.ethernet);
-        transition select(hdr.ethernet.etherType) {
+        transition select(hdr.ethernet.etherType) 
+        {
             TYPE_ARP: parse_arp;
             TYPE_IPV4: parse_ipv4;
         }
     }
 
-    state parse_arp {
+    state parse_arp 
+    {
         packet.extract(hdr.arp);
-        transition select(hdr.arp.op_code) {
+        transition select(hdr.arp.op_code) 
+        {
             TYPE_ARP_REQ: accept;
         }
     }
 
-    state parse_ipv4 {
+    state parse_ipv4 
+    {
         packet.extract(hdr.ipv4);
-        transition select(hdr.ipv4.protocol) {
+        transition select(hdr.ipv4.protocol) 
+        {
             TYPE_ICMP: parse_icmp;
             default: accept;
         }
     }
 
-    state parse_icmp {
+    state parse_icmp 
+    {
         packet.extract(hdr.icmp);
         transition accept;
     }
@@ -135,9 +150,10 @@ parser MyParser(packet_in packet,
 ************   C H E C K S U M    V E R I F I C A T I O N   *************
 *************************************************************************/
 
-control MyVerifyChecksum(inout headers hdr, 
-                         inout metadata meta) {
-    apply {
+control MyVerifyChecksum(inout headers hdr, inout metadata meta) 
+{
+    apply 
+    {
         verify_checksum(
             hdr.ipv4.isValid(),
             { 
@@ -178,12 +194,15 @@ control MyVerifyChecksum(inout headers hdr,
 
 control MyIngress(inout headers hdr,
                   inout metadata meta,
-                  inout standard_metadata_t standard_metadata) {
-    action drop() {
+                  inout standard_metadata_t standard_metadata) 
+{
+    action drop() 
+    {
         mark_to_drop(standard_metadata);
     }
 
-    action arp_reply(macAddr_t request_mac) {
+    action arp_reply(macAddr_t request_mac) 
+    {
         hdr.arp.op_code = TYPE_ARP_REP;
         hdr.arp.dst_mac = hdr.arp.src_mac;
         hdr.arp.src_mac = request_mac;
@@ -198,7 +217,8 @@ control MyIngress(inout headers hdr,
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
-    action forward(macAddr_t dstAddr, egressSpec_t port) {
+    action forward(macAddr_t dstAddr, egressSpec_t port) 
+    {
         hdr.ethernet.srcAddr = hdr.ethernet.dstAddr;
         hdr.ethernet.dstAddr = dstAddr;
         hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
@@ -206,7 +226,8 @@ control MyIngress(inout headers hdr,
         standard_metadata.egress_spec = port;
     }
 
-    action echo_reply() {
+    action echo_reply() 
+    {
         hdr.icmp.type = TYPE_ECHO_REP;
         hdr.icmp.checksum = 0;
 
@@ -222,7 +243,8 @@ control MyIngress(inout headers hdr,
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
-    table arp_responder {
+    table arp_responder 
+    {
         key = {
             hdr.arp.dst_ip: exact;
         }
@@ -233,7 +255,8 @@ control MyIngress(inout headers hdr,
         default_action = drop;
     }
 
-    table ipv4_lpm {
+    table ipv4_lpm 
+    {
         key = {
             hdr.ipv4.dstAddr: lpm;
         }
@@ -244,7 +267,8 @@ control MyIngress(inout headers hdr,
         default_action = drop();
     }
 
-    table echo_responder {
+    table echo_responder 
+    {
         key = {
             hdr.ethernet.dstAddr: exact;
             hdr.ipv4.dstAddr: exact;
@@ -261,42 +285,39 @@ control MyIngress(inout headers hdr,
         }
     }
 
-    apply {
-        if(hdr.arp.isValid()){
+    apply 
+    {
+        if(hdr.arp.isValid())
+        {
             arp_responder.apply();
         }
-        else if(hdr.ipv4.isValid()) {
-            if(hdr.ipv4.ttl > 1) {
-                if(hdr.ipv4.protocol == TYPE_ICMP){
-                    if(hdr.icmp.isValid()) {
-                        if(hdr.icmp.type == TYPE_ECHO_REQ) {
-                            if(hdr.ipv4.dstAddr == IPr1) {
-                                echo_responder.apply();
-                            }
-                            else if(hdr.ipv4.dstAddr == IPr2) {
-                                echo_responder.apply();
-                            }
-                            else {
-                                ipv4_lpm.apply();
-                            }
-                        }
-                        else {
-                            ipv4_lpm.apply();
-                        }
+        else if(hdr.ipv4.isValid()) 
+        {
+            if(hdr.ipv4.ttl > 1) 
+            {
+                if(hdr.ipv4.protocol == TYPE_ICMP && hdr.icmp.isValid()) 
+                {
+                    if(hdr.icmp.type == TYPE_ECHO_REQ && (hdr.ipv4.dstAddr == IPr1 || hdr.ipv4.dstAddr == IPr2)) 
+                    {
+                        echo_responder.apply();
                     }
-                    else {
+                    else 
+                    {
                         ipv4_lpm.apply();
                     }
                 }
-                else {
+                else 
+                {
                     ipv4_lpm.apply();
                 }
             }
-            else {
+            else 
+            {
                 drop();
             }
         }
-        else {
+        else 
+        {
             drop();
         }
     }
@@ -308,7 +329,8 @@ control MyIngress(inout headers hdr,
 
 control MyEgress(inout headers hdr,
                  inout metadata meta,
-                 inout standard_metadata_t standard_metadata) {
+                 inout standard_metadata_t standard_metadata) 
+{
     apply {  }
 }
 
@@ -316,9 +338,10 @@ control MyEgress(inout headers hdr,
 *************   C H E C K S U M    C O M P U T A T I O N   **************
 *************************************************************************/
 
-control MyComputeChecksum(inout headers  hdr, 
-                          inout metadata meta) {
-     apply {
+control MyComputeChecksum(inout headers  hdr, inout metadata meta) 
+{
+     apply 
+     {
         update_checksum(
             hdr.ipv4.isValid(),
             { 
@@ -357,9 +380,10 @@ control MyComputeChecksum(inout headers  hdr,
 ***********************  D E P A R S E R  *******************************
 *************************************************************************/
 
-control MyDeparser(packet_out packet, 
-                   in headers hdr) {
-    apply {
+control MyDeparser(packet_out packet, in headers hdr) 
+{
+    apply 
+    {
         packet.emit(hdr.ethernet);
         packet.emit(hdr.arp);
         packet.emit(hdr.ipv4);

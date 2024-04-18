@@ -5,17 +5,17 @@
 const bit<16> TYPE_ARP      = 0x0806;
 const bit<16> TYPE_IPV4     = 0x0800;
 const bit<16> TYPE_IPV6     = 0x86DD;
-const bit<8>  TYPE_ICMPv4   = 0x01;
+const bit<8>  TYPE_ICMPV4   = 0x01;
 const bit<8>  TYPE_ICMPV6   = 0x3A;
 const bit<8>  TYPE_UDP      = 0x11;
 const bit<8>  TYPE_TCP      = 0x06;
 
-const bit<16> ARP_HTYPE     = 0x0001;
-const bit<16> ARP_PTYPE     = TYPE_IPV4;
-const bit<8>  ARP_HLEN      = 0x06;
-const bit<8>  ARP_PLEN      = 0x04;
-const bit<16> ARP_REQ       = 0x0001;
-const bit<16> ARP_REPLY     = 0x0002;
+const bit<16> TYPE_ARP_HTYPE    = 0x0001;
+const bit<16> TYPE_ARP_PTYPE    = TYPE_IPV4;
+const bit<8>  TYPE_ARP_HLEN     = 0x06;
+const bit<8>  TYPE_ARP_PLEN     = 0x04;
+const bit<16> TYPE_ARP_REQ      = 0x0001;
+const bit<16> TYPE_ARP_REP      = 0x0002;
 
 const bit<8>  TYPE_ECHO_REP_V4  = 0x00;
 const bit<8>  TYPE_DEST_UNR_V4  = 0x03;
@@ -59,13 +59,15 @@ const macAddr_t MACr2 = 0x00249b807838;
 *********************** H E A D E R S  ***********************************
 *************************************************************************/
 
-header ethernet_t {
+header ethernet_t 
+{
     macAddr_t   dstAddr;
     macAddr_t   srcAddr;
     bit<16>     etherType;
 }
 
-header arp_t {
+header arp_t 
+{
     bit<16>     h_type;
     bit<16>     p_type;
     bit<8>      h_len;
@@ -77,7 +79,8 @@ header arp_t {
     ip4Addr_t   dst_ip;
 }
 
-header ipv4_t {
+header ipv4_t 
+{
     bit<4>      version;
     bit<4>      ihl;
     bit<8>      diffserv;
@@ -92,7 +95,8 @@ header ipv4_t {
     ip4Addr_t   dstAddr;
 }
 
-header ipv6_t {
+header ipv6_t 
+{
     bit<4>      version;
     bit<8>      trafficClass;
     bit<20>     flowLabel;
@@ -103,24 +107,28 @@ header ipv6_t {
     ip6Addr_t   dstAddr;
 }
 
-header_union ip_t {
+header_union ip_t 
+{
     ipv4_t      ipv4;
     ipv6_t      ipv6;
 }
 
-header icmp_t {
+header icmp_t 
+{
     bit<8>      type;
     bit<8>      code;
     bit<16>     checksum;
 }
 
-header echo_t {
+header echo_t 
+{
     bit<16>     identifier;
     bit<16>     seqNum;
     bit<448>    data;
 }
 
-header ndp_t {
+header nei_t 
+{
     bit<1>      rFlag;
     bit<1>      sFlag;
     bit<1>      oFlag;
@@ -131,16 +139,19 @@ header ndp_t {
     macAddr_t   llAddr;
 }
 
-header_union message_t {
+header_union message_t 
+{
     echo_t  echo;
-    ndp_t   ndp;
+    nei_t   nei;
 }
 
-struct metadata {
+struct metadata 
+{
     /* empty */
 }
 
-struct headers {
+struct headers 
+{
     ethernet_t  ethernet;
     arp_t       arp;
     ip_t        ip;
@@ -155,67 +166,83 @@ struct headers {
 parser MyParser(packet_in packet,
                 out headers hdr,
                 inout metadata meta,
-                inout standard_metadata_t standard_metadata) {
-    state start {
+                inout standard_metadata_t standard_metadata) 
+{
+    state start 
+    {
         transition parse_ethernet;
     }
 
-    state parse_ethernet {
+    state parse_ethernet 
+    {
         packet.extract(hdr.ethernet);
-        transition select(hdr.ethernet.etherType) {
+        transition select(hdr.ethernet.etherType) 
+        {
             TYPE_ARP: parse_arp;
             TYPE_IPV4: parse_ipv4;
             TYPE_IPV6: parse_ipv6;
         }
     }
 
-    state parse_arp {
+    state parse_arp 
+    {
         packet.extract(hdr.arp);
-        transition select(hdr.arp.op_code) {
+        transition select(hdr.arp.op_code) 
+        {
             TYPE_ARP_REQ: accept;
         }
     }
 
-    state parse_ipv4 {
+    state parse_ipv4 
+    {
         packet.extract(hdr.ip.ipv4);
-        transition select(hdr.ip.ipv4.protocol) {
+        transition select(hdr.ip.ipv4.protocol) 
+        {
             TYPE_ICMPV4: parse_icmpv4;
             default: accept;
         }
     }
 
-    state parse_ipv6 {
+    state parse_ipv6 
+    {
         packet.extract(hdr.ip.ipv6);
-        transition select(hdr.ip.ipv6.nextHeader) {
+        transition select(hdr.ip.ipv6.nextHeader) 
+        {
             TYPE_ICMPV6: parse_icmpv6;
             default: accept;
         }
     }
 
-    state parse_icmpv4 {
+    state parse_icmpv4 
+    {
         packet.extract(hdr.icmp);
-        transition select(hdr.icmp.type) {
+        transition select(hdr.icmp.type) 
+        {
             TYPE_ECHO_REQ_V4: parse_echo;
             default: accept;
         }
     }
 
-    state parse_icmpv6 {
+    state parse_icmpv6 
+    {
         packet.extract(hdr.icmp);
-        transition select(hdr.icmp.type) {
+        transition select(hdr.icmp.type) 
+        {
             TYPE_ECHO_REQ_V6: parse_echo;
-            TYPE_NEI_SOL: parse_ndp;
+            TYPE_NEI_SOL_V6: parse_nei;
             default: accept;
         }
     }
 
-    state parse_echo {
+    state parse_echo 
+    {
         packet.extract(hdr.message.echo);
         transition accept;
     }
 
-    state parse_ndp {
-        packet.extract(hdr.message.ndp);
+    state parse_nei
+    {
+        packet.extract(hdr.message.nei);
         transition accept;
     }
 }
@@ -224,8 +251,10 @@ parser MyParser(packet_in packet,
 ************   C H E C K S U M    V E R I F I C A T I O N   *************
 *************************************************************************/
 
-control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
-    apply { 
+control MyVerifyChecksum(inout headers hdr, inout metadata meta) 
+{
+    apply 
+    { 
         verify_checksum(
             hdr.ip.ipv4.isValid(),
             { 
@@ -275,7 +304,7 @@ control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
             HashAlgorithm.csum16
         );
         verify_checksum(
-            (hdr.ip.ipv6.isValid() && hdr.icmp.isValid() && hdr.message.ndp.isValid()),
+            (hdr.ip.ipv6.isValid() && hdr.icmp.isValid() && hdr.message.nei.isValid()),
             {
                 hdr.ip.ipv6.srcAddr,
                 hdr.ip.ipv6.dstAddr,
@@ -284,14 +313,14 @@ control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
                 hdr.ip.ipv6.nextHeader,
                 hdr.icmp.type,
                 hdr.icmp.code,
-                hdr.message.ndp.rFlag,
-                hdr.message.ndp.sFlag,
-                hdr.message.ndp.oFlag,
-                hdr.message.ndp.reserved,
-                hdr.message.ndp.trgAddr,
-                hdr.message.ndp.optType,
-                hdr.message.ndp.optLen,
-                hdr.message.ndp.llAddr
+                hdr.message.nei.rFlag,
+                hdr.message.nei.sFlag,
+                hdr.message.nei.oFlag,
+                hdr.message.nei.reserved,
+                hdr.message.nei.trgAddr,
+                hdr.message.nei.optType,
+                hdr.message.nei.optLen,
+                hdr.message.nei.llAddr
             },
             hdr.icmp.checksum,
             HashAlgorithm.csum16
@@ -305,12 +334,15 @@ control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
 
 control MyIngress(inout headers hdr,
                   inout metadata meta,
-                  inout standard_metadata_t standard_metadata) {
-    action drop() {
+                  inout standard_metadata_t standard_metadata) 
+{
+    action drop() 
+    {
         mark_to_drop(standard_metadata);
     }
 
-    action arp_reply(macAddr_t request_mac) {
+    action arp_reply(macAddr_t request_mac) 
+    {
         hdr.arp.op_code = TYPE_ARP_REP;
         hdr.arp.dst_mac = hdr.arp.src_mac;
         hdr.arp.src_mac = request_mac;
@@ -325,29 +357,35 @@ control MyIngress(inout headers hdr,
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
-    action forward(macAddr_t dstAddr, egressSpec_t port) {
+    action forward(macAddr_t dstAddr, egressSpec_t port) 
+    {
         hdr.ethernet.srcAddr = hdr.ethernet.dstAddr;
         hdr.ethernet.dstAddr = dstAddr;
 
-        if(hdr.ethernet.etherType == TYPE_IPV4){
+        if(hdr.ethernet.etherType == TYPE_IPV4)
+        {
             hdr.ip.ipv4.ttl = hdr.ip.ipv4.ttl - 1;
         }
-        else {
+        else 
+        {
             hdr.ip.ipv6.hopLimit = hdr.ip.ipv6.hopLimit - 1;
         }
 
         standard_metadata.egress_spec = port;
     }
 
-    action echo_reply() {
-        if(hdr.ethernet.etherType == TYPE_IPV4) {
+    action echo_reply() 
+    {
+        if(hdr.ethernet.etherType == TYPE_IPV4) 
+        {
             hdr.icmp.type = TYPE_ECHO_REP_V4;  
             bit<32> tmp_ip = hdr.ip.ipv4.srcAddr;
             hdr.ip.ipv4.srcAddr = hdr.ip.ipv4.dstAddr;
             hdr.ip.ipv4.dstAddr = tmp_ip;
             hdr.ip.ipv4.ttl = 255;
         }
-        else {
+        else 
+        {
             hdr.icmp.type = TYPE_ECHO_REP_V6;
             bit<128> tmp_ip = hdr.ip.ipv6.srcAddr;
             hdr.ip.ipv6.srcAddr = hdr.ip.ipv6.dstAddr;
@@ -363,61 +401,96 @@ control MyIngress(inout headers hdr,
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
     
-    action destination_unreachable(ingressSpec_t src) {
-        bit<320> ipv6_datagram = hdr.ipv6.version ++ hdr.ipv6.trafficClass ++ hdr.ipv6.flowLabel 
-                                ++ hdr.ipv6.payloadLen ++ hdr.ipv6.nextHeader ++ hdr.ipv6.hopLimit 
-                                ++ hdr.ipv6.srcAddr ++ hdr.ipv6.dstAddr;
-        bit<32> icmpv6_datagram = hdr.icmpv6.type ++ hdr.icmpv6.code ++ hdr.icmpv6.checksum;
-        bit<480> echo_datagram = hdr.echo.identifier ++ hdr.echo.seqNum ++ hdr.echo.data;
+    action destination_unreachable(ingressSpec_t src) 
+    {
+        bit<320> ipv6_datagram = hdr.ip.ipv6.version 
+                                ++ hdr.ip.ipv6.trafficClass 
+                                ++ hdr.ip.ipv6.flowLabel 
+                                ++ hdr.ip.ipv6.payloadLen 
+                                ++ hdr.ip.ipv6.nextHeader 
+                                ++ hdr.ip.ipv6.hopLimit 
+                                ++ hdr.ip.ipv6.srcAddr 
+                                ++ hdr.ip.ipv6.dstAddr;
+        bit<32> icmpv6_datagram = hdr.icmp.type 
+                                ++ hdr.icmp.code 
+                                ++ hdr.icmp.checksum;
+        bit<480> echo_datagram = hdr.message.echo.identifier 
+                                ++ hdr.message.echo.seqNum 
+                                ++ hdr.message.echo.data;
 
-        hdr.icmpv6.type = TYPE_DEST_UNR;
-        hdr.icmpv6.checksum = 0;
-        hdr.echo.identifier = 0;
-        hdr.echo.seqNum = 0;
-        hdr.echo.data = ipv6_datagram ++ icmpv6_datagram ++ echo_datagram[479:384];
+        hdr.icmp.type = TYPE_DEST_UNR_V6;
+        hdr.icmp.checksum = 0;
+        hdr.message.echo.identifier = 0;
+        hdr.message.echo.seqNum = 0;
+        hdr.message.echo.data = ipv6_datagram 
+                        ++ icmpv6_datagram 
+                        ++ echo_datagram[479:384];
 
-        hdr.ipv6.dstAddr = hdr.ipv6.srcAddr;
-        hdr.ipv6.hopLimit = 255;
+        hdr.ip.ipv6.dstAddr = hdr.ip.ipv6.srcAddr;
+        hdr.ip.ipv6.hopLimit = 255;
         hdr.ethernet.dstAddr = hdr.ethernet.srcAddr;
 
-        if (hdr.ipv6.srcAddr[127:16] == IPr2[127:16]){
-            src == 2;
+        ingressSpec_t src2 = 0;
+        
+        if (hdr.ip.ipv6.srcAddr[127:16] == IPV6r2[127:16])
+        {
+            src2 = 2;
+        }
+        else
+        {
+            src2 = src;
         }
 
-        if(src == 1){
-            hdr.ipv6.srcAddr = IPr1;
+        if(src == 1)
+        {
+            hdr.ip.ipv6.srcAddr = IPV6r1;
             hdr.ethernet.srcAddr = MACr1;
         }
-        else {
-            hdr.ipv6.srcAddr = IPr2;
+        else 
+        {
+            hdr.ip.ipv6.srcAddr = IPV6r2;
             hdr.ethernet.srcAddr = MACr2;
         }
 
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
-    action time_exceeded(ingressSpec_t src) {
-        bit<320> ipv6_datagram = hdr.ip.ipv6.version ++ hdr.ip.ipv6.trafficClass ++ hdr.ip.ipv6.flowLabel 
-                                ++ hdr.ip.ipv6.payloadLen ++ hdr.ip.ipv6.nextHeader ++ hdr.ip.ipv6.hopLimit 
-                                ++ hdr.ip.ipv6.srcAddr ++ hdr.ip.ipv6.dstAddr;
-        bit<32>  icmp_datagram = hdr.icmp.type ++ hdr.icmp.code ++ hdr.icmp.checksum;
-        bit<480> echo_datagram = hdr.message.echo.identifier ++ hdr.message.echo.seqNum ++ hdr.message.echo.data;
+    action time_exceeded(ingressSpec_t src) 
+    {
+        bit<320> ipv6_datagram = hdr.ip.ipv6.version 
+                                ++ hdr.ip.ipv6.trafficClass 
+                                ++ hdr.ip.ipv6.flowLabel 
+                                ++ hdr.ip.ipv6.payloadLen 
+                                ++ hdr.ip.ipv6.nextHeader 
+                                ++ hdr.ip.ipv6.hopLimit 
+                                ++ hdr.ip.ipv6.srcAddr 
+                                ++ hdr.ip.ipv6.dstAddr;
+        bit<32>  icmp_datagram = hdr.icmp.type 
+                                ++ hdr.icmp.code 
+                                ++ hdr.icmp.checksum;
+        bit<480> echo_datagram = hdr.message.echo.identifier 
+                                ++ hdr.message.echo.seqNum 
+                                ++ hdr.message.echo.data;
 
         hdr.icmp.type = TYPE_TIME_EXC_V6;
         hdr.icmp.checksum = 0;
         hdr.message.echo.identifier = 0;
         hdr.message.echo.seqNum = 0;
-        hdr.message.echo.data = ipv6_datagram ++ icmp_datagram ++ echo_datagram[479:384];
+        hdr.message.echo.data = ipv6_datagram 
+                                ++ icmp_datagram 
+                                ++ echo_datagram[479:384];
 
         hdr.ip.ipv6.dstAddr = hdr.ip.ipv6.srcAddr;
         hdr.ip.ipv6.hopLimit = 255;
         hdr.ethernet.dstAddr = hdr.ethernet.srcAddr;
 
-        if(src == 1){
+        if(src == 1)
+        {
             hdr.ip.ipv6.srcAddr = IPV6r1;
             hdr.ethernet.srcAddr = MACr1;
         }
-        else {
+        else 
+        {
             hdr.ip.ipv6.srcAddr = IPV6r2;
             hdr.ethernet.srcAddr = MACr2;
         }
@@ -425,24 +498,27 @@ control MyIngress(inout headers hdr,
         standard_metadata.egress_spec = standard_metadata.ingress_port; 
     }
 
-    action nei_adv(macAddr_t llAddr, ingressSpec_t src) {
-        hdr.icmp.type = TYPE_NEI_ADV;
+    action nei_adv(macAddr_t llAddr, ingressSpec_t src) 
+    {
+        hdr.icmp.type = TYPE_NEI_ADV_V6;
         hdr.icmp.checksum = 0;
-        hdr.message.ndp.rFlag = 1;
-        hdr.message.ndp.sFlag = 1;
-        hdr.message.ndp.oFlag = 1;
-        hdr.message.ndp.optType = 0x02;
-        hdr.message.ndp.llAddr = llAddr;
+        hdr.message.nei.rFlag = 1;
+        hdr.message.nei.sFlag = 1;
+        hdr.message.nei.oFlag = 1;
+        hdr.message.nei.optType = 0x02;
+        hdr.message.nei.llAddr = llAddr;
 
         hdr.ip.ipv6.dstAddr = hdr.ip.ipv6.srcAddr;
         hdr.ip.ipv6.hopLimit = 255;
         hdr.ethernet.dstAddr = hdr.ethernet.srcAddr;
 
-        if(src == 1){
+        if(src == 1)
+        {
             hdr.ip.ipv6.srcAddr = IPV6r1;
             hdr.ethernet.srcAddr = MACr1;
         }
-        else {
+        else 
+        {
             hdr.ip.ipv6.srcAddr = IPV6r2;
             hdr.ethernet.srcAddr = MACr2;
         }
@@ -450,7 +526,8 @@ control MyIngress(inout headers hdr,
         standard_metadata.egress_spec = standard_metadata.ingress_port;
     }
 
-    table arp_responder {
+    table arp_responder 
+    {
         key = {
             hdr.arp.dst_ip: exact;
         }
@@ -461,7 +538,8 @@ control MyIngress(inout headers hdr,
         default_action = drop;
     }
 
-    table ipv4_lpm {
+    table ipv4_lpm 
+    {
         key = {
             hdr.ip.ipv4.dstAddr: lpm;
         }
@@ -472,18 +550,21 @@ control MyIngress(inout headers hdr,
         default_action = drop();
     }
 
-    table ipv6_lpm {
+    table ipv6_lpm 
+    {
         key = {
             hdr.ip.ipv6.dstAddr: lpm;
         }
         actions = {
             forward;
+            destination_unreachable;
             drop;
         }
         default_action = destination_unreachable(1);
     }
 
-    table echo_responder_v4 {
+    table echo_responder_v4 
+    {
         key = {
             hdr.ethernet.dstAddr: exact;
             hdr.ip.ipv4.dstAddr: exact;
@@ -500,7 +581,8 @@ control MyIngress(inout headers hdr,
         }
     }
 
-    table echo_responder_v6 {
+    table echo_responder_v6 
+    {
         key = {
             hdr.ethernet.dstAddr: exact;
             hdr.ip.ipv6.dstAddr: exact;
@@ -517,23 +599,8 @@ control MyIngress(inout headers hdr,
         }
     }
 
-    table destination_unreachable_responder {
-        key = {
-            hdr.ipv6.srcAddr[127:16]: lpm;
-        }
-        actions = {
-            time_exceeded;
-            drop;
-        }
-        default_action = destination_unreachable(1);
-
-        const entries = {
-            IPr1[127:16]: destination_unreachable(1);
-            IPr2[127:16]: destination_unreachable(2);
-        }
-    }
-
-    table time_exceeded_responder {
+    table time_exceeded_responder 
+    {
         key = {
             hdr.ip.ipv6.srcAddr[127:16]: lpm;
         }
@@ -549,9 +616,10 @@ control MyIngress(inout headers hdr,
         }
     }
 
-    table nei_responder {
+    table nei_responder 
+    {
         key = {
-            hdr.message.ndp.trgAddr: exact;
+            hdr.message.nei.trgAddr: exact;
         }
         actions = {
             nei_adv;
@@ -560,76 +628,68 @@ control MyIngress(inout headers hdr,
         default_action = drop();
     }
     
-    apply {
-        if(hdr.arp.isValid()){
+    apply 
+    {
+        if(hdr.arp.isValid())
+        {
             arp_responder.apply();
         }
-        else if(hdr.ip.ipv4.isValid()) {
-            if(hdr.ip.ipv4.ttl > 1) {
-                if(hdr.ip.ipv4.protocol == TYPE_ICMPV4) {
-                    if(hdr.icmp.isValid()) {
-                        if(hdr.icmp.type == TYPE_ECHO_REQ_V4) {
-                            if(hdr.ip.ipv4.dstAddr == IPV4r1) {
-                                echo_responder_v4.apply();
-                            }
-                            else if(hdr.ip.ipv4.dstAddr == IPV4r2) {
-                                echo_responder_v4.apply();
-                            }
-                            else {
-                                ipv4_lpm.apply();
-                            }
-                        }
-                        else {
-                            ipv4_lpm.apply();
-                        }
+        else if(hdr.ip.ipv4.isValid()) 
+        {
+            if(hdr.ip.ipv4.ttl > 1) 
+            {
+                if(hdr.ip.ipv4.protocol == TYPE_ICMPV4 && hdr.icmp.isValid()) 
+                {
+                    if(hdr.icmp.type == TYPE_ECHO_REQ_V4 && (hdr.ip.ipv4.dstAddr == IPV4r1 || hdr.ip.ipv4.dstAddr == IPV4r2)) 
+                    {
+                        echo_responder_v4.apply();
                     }
-                    else {
+                    else 
+                    {
                         ipv4_lpm.apply();
                     }
                 }
-                else {
+                else 
+                {
                     ipv4_lpm.apply();
                 }
             }
-            else {
+            else 
+            {
                 drop();
             }
         }
-        else if(hdr.ip.ipv6.isValid()) {
-            if(hdr.ip.ipv6.hopLimit > 1) {
-                if (hdr.ipv6.nextHeader == TYPE_ICMPV6) {
-                    if(hdr.icmp.isValid()) {
-                        if (hdr.icmp.type == TYPE_ECHO_REQ_V6) {
-                            if(hdr.ipv6.dstAddr == IPV6r1) {
-                                echo_responder_v6.apply();
-                            }
-                            else if(hdr.ipv6.dstAddr == IPV6r2) {
-                                echo_responder_v6.apply();
-                            }
-                            else {
-                                ipv6_lpm.apply();
-                            }
-                        }
-                        else if (hdr.icmp.type == TYPE_NEI_SOL) {
-                            nei_responder.apply();
-                        }
-                        else {
-                            ipv6_lpm.apply();
-                        }
+        else if(hdr.ip.ipv6.isValid()) 
+        {
+            if(hdr.ip.ipv6.hopLimit > 1) 
+            {
+                if (hdr.ip.ipv6.nextHeader == TYPE_ICMPV6 && hdr.icmp.isValid()) 
+                {
+                    if (hdr.icmp.type == TYPE_ECHO_REQ_V6 && (hdr.ip.ipv6.dstAddr == IPV6r1 || hdr.ip.ipv6.dstAddr == IPV6r2))
+                    {
+                        echo_responder_v6.apply();
                     }
-                    else {
-                        ip6_lpm.apply();
+                    else if (hdr.icmp.type == TYPE_NEI_SOL_V6) 
+                    {
+                        nei_responder.apply();
+                    }
+                    else 
+                    {
+                        ipv6_lpm.apply();
                     }
                 }
-                else {
+                else 
+                {
                     ipv6_lpm.apply();
                 }
             }
-            else {
+            else 
+            {
                 time_exceeded_responder.apply();
             }
         }
-        else {
+        else 
+        {
             drop();
         }
     }
@@ -641,7 +701,8 @@ control MyIngress(inout headers hdr,
 
 control MyEgress(inout headers hdr,
                  inout metadata meta,
-                 inout standard_metadata_t standard_metadata) {
+                 inout standard_metadata_t standard_metadata)
+{
     apply {  }
 }
 
@@ -649,9 +710,10 @@ control MyEgress(inout headers hdr,
 *************   C H E C K S U M    C O M P U T A T I O N   **************
 *************************************************************************/
 
-control MyComputeChecksum(inout headers hdr, 
-                          inout metadata meta) {
-     apply { 
+control MyComputeChecksum(inout headers hdr, inout metadata meta) 
+{
+     apply 
+     { 
         update_checksum(
             hdr.ip.ipv4.isValid(),
             { 
@@ -701,7 +763,7 @@ control MyComputeChecksum(inout headers hdr,
             HashAlgorithm.csum16
         );
         update_checksum(
-            (hdr.ip.ipv6.isValid() && hdr.icmp.isValid() && hdr.message.ndp.isValid()),
+            (hdr.ip.ipv6.isValid() && hdr.icmp.isValid() && hdr.message.nei.isValid()),
             {
                 hdr.ip.ipv6.srcAddr,
                 hdr.ip.ipv6.dstAddr,
@@ -710,14 +772,14 @@ control MyComputeChecksum(inout headers hdr,
                 hdr.ip.ipv6.nextHeader,
                 hdr.icmp.type,
                 hdr.icmp.code,
-                hdr.message.ndp.rFlag,
-                hdr.message.ndp.sFlag,
-                hdr.message.ndp.oFlag,
-                hdr.message.ndp.reserved,
-                hdr.message.ndp.trgAddr,
-                hdr.message.ndp.optType,
-                hdr.message.ndp.optLen,
-                hdr.message.ndp.llAddr
+                hdr.message.nei.rFlag,
+                hdr.message.nei.sFlag,
+                hdr.message.nei.oFlag,
+                hdr.message.nei.reserved,
+                hdr.message.nei.trgAddr,
+                hdr.message.nei.optType,
+                hdr.message.nei.optLen,
+                hdr.message.nei.llAddr
             },
             hdr.icmp.checksum,
             HashAlgorithm.csum16
@@ -729,9 +791,10 @@ control MyComputeChecksum(inout headers hdr,
 ***********************  D E P A R S E R  *******************************
 *************************************************************************/
 
-control MyDeparser(packet_out packet, 
-                   in headers hdr) {
-    apply {
+control MyDeparser(packet_out packet, in headers hdr) 
+{
+    apply 
+    {
         packet.emit(hdr.ethernet);
         packet.emit(hdr.arp);
         packet.emit(hdr.ip);
