@@ -8,12 +8,12 @@ const bit<8>  TYPE_ICMP     = 0x01;
 const bit<8>  TYPE_UDP      = 0x11;
 const bit<8>  TYPE_TCP      = 0x06;
 
-const bit<16> TYPE_ARP_HTYPE    = 0x0001;
-const bit<16> TYPE_ARP_PTYPE    = TYPE_IPV4;
-const bit<8>  TYPE_ARP_HLEN     = 0x06;
-const bit<8>  TYPE_ARP_PLEN     = 0x04;
-const bit<16> TYPE_ARP_REQ      = 0x0001;
-const bit<16> TYPE_ARP_REP      = 0x0002;
+const bit<16> TYPE_ARP_H    = 0x0001;
+const bit<16> TYPE_ARP_P    = TYPE_IPV4;
+const bit<8>  TYPE_ARP_HLEN = 0x06;
+const bit<8>  TYPE_ARP_PLEN = 0x04;
+const bit<16> TYPE_ARP_REQ  = 0x0001;
+const bit<16> TYPE_ARP_REP  = 0x0002;
 
 const bit<8>  TYPE_ECHO_REP = 0x00;
 const bit<8>  TYPE_DEST_UNR = 0x03;

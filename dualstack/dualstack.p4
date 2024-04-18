@@ -10,12 +10,12 @@ const bit<8>  TYPE_ICMPV6   = 0x3A;
 const bit<8>  TYPE_UDP      = 0x11;
 const bit<8>  TYPE_TCP      = 0x06;
 
-const bit<16> TYPE_ARP_HTYPE    = 0x0001;
-const bit<16> TYPE_ARP_PTYPE    = TYPE_IPV4;
-const bit<8>  TYPE_ARP_HLEN     = 0x06;
-const bit<8>  TYPE_ARP_PLEN     = 0x04;
-const bit<16> TYPE_ARP_REQ      = 0x0001;
-const bit<16> TYPE_ARP_REP      = 0x0002;
+const bit<16> TYPE_ARP_H    = 0x0001;
+const bit<16> TYPE_ARP_P    = TYPE_IPV4;
+const bit<8>  TYPE_ARP_HLEN = 0x06;
+const bit<8>  TYPE_ARP_PLEN = 0x04;
+const bit<16> TYPE_ARP_REQ  = 0x0001;
+const bit<16> TYPE_ARP_REP  = 0x0002;
 
 const bit<8>  TYPE_ECHO_REP_V4  = 0x00;
 const bit<8>  TYPE_DEST_UNR_V4  = 0x03;
@@ -50,10 +50,10 @@ typedef bit<128> ip6Addr_t;
 
 const ip6Addr_t IPV6r1  = 0xfe80000000000000a2cec8fffea20000;
 const ip4Addr_t IPV4r1  = 0xa9fe0900;
-const macAddr_t MACr1 = 0xa0cec8a26d15;
+const macAddr_t MACr1   = 0xa0cec8a26d15;
 const ip6Addr_t IPV6r2  = 0xfe8000000000000002249bfffe800000;
 const ip4Addr_t IPV4r2  = 0xa9febc00;
-const macAddr_t MACr2 = 0x00249b807838;
+const macAddr_t MACr2   = 0x00249b807838;
 
 /*************************************************************************
 *********************** H E A D E R S  ***********************************
