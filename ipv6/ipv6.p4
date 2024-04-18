@@ -51,18 +51,22 @@ parser MyParser(packet_in packet,
                 inout metadata meta,
                 inout standard_metadata_t standard_metadata) 
 {
-    state start {
+    state start 
+    {
         transition parse_ethernet;
     }
 
-    state parse_ethernet {
+    state parse_ethernet 
+    {
         packet.extract(hdr.ethernet);
-        transition select(hdr.ethernet.etherType) {
+        transition select(hdr.ethernet.etherType) 
+        {
             TYPE_IPV6: parse_ipv6;
         }
     }
 
-    state parse_ipv6 {
+    state parse_ipv6 
+    {
         packet.extract(hdr.ipv6);
         transition accept;
     }
