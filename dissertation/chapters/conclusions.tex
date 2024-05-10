@@ -1,0 +1,34 @@
+%TC:envir minted 1 xall 
+%TC:envir algorithmic 1 xall
+
+% Include tables in word count
+%TC:envir table 0 word
+%TC:envir tabular 1 word
+
+% Include footnotes in word count
+%TC:macro \footnote [text]
+%TC:macro \footnotetext [text]
+
+%TC:group minted 0 0
+%TC:macro \mintinline [ignore]
+%TC:macro \colb [ignore]
+%TC:macro \hyperref [ignore]
+
+\label{sec:5}
+
+This project was motivated by the difficulties posed by the Internet's transition from IPv4 to IPv6. I aimed to build an IPv6 router prototype on a software-defined platform that does not currently support IPv6 and analyse the steps needed to achieve this. I had tentatively hoped to show that my prototype would not impact the performance of a network.
+
+
+\section{Achievements}
+\label{sec:5.1}
+This project fulfils its core objectives, along with three proposed extensions. I learned the domain-specific language P4 and how to run P4 programs on the P4Pi platform. I built an IPv6 router prototype that implements parsing, forwarding, longest prefix matching, along with ICMPv6 and NDP functionalities. As my final extension, I combined an IPv4 router prototype with my IPv6 router to implement a dual-stack router prototype, capable of processing packets in both protocols. In \cref{sec:4} I established the correctness of my programs, a high level of adherence to established IETF standards, and stable performance of the IPv6 and dual-stack routers when compared to the IPv4 router. The results gathered during the performance evaluation showed that the routers exhibit no significant change in efficiency when processing known test traffic. This allowed me to tentatively conclude that the migration of software-based IPv4 routers to IPv6 or dual-stack routers is possible without negative impacts on the network, and hopefully outlines a pathway to the more widespread adoption of IPv6 in software switches.
+
+\section{Lessons Learnt}
+\label{sec:5.2}
+
+Looking back, I was overly optimistic about how quickly I would acquire the necessary baseline skills to start working on my project. Learning P4 and how to work with P4Pi took much longer than I expected. Once I got into the work, however, I found that the extensions followed naturally from one another, and I did not always need the full two weeks to implement a new functionality. I would benefit in the future to allocate appropriate time for project preparation and planning in order to avoid deviating from my outlined timetable.
+
+\section{Future Work}
+\label{sec:5.3}
+
+This project can be expanded upon in many ways, but the most natural next steps would be to implement any remaining ICMPv6 and NDP data plane functionalities that are required by the IETF, but not adopted in my project (as described in \cref{sec:4.2}). Alternatively, the router's control plane could be developed with services such as IP routing protocols, among others. Any further work could involve building networks with more hosts, more subnets, or even by connecting the router to the world wide web.

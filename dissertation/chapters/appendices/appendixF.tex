@@ -1,0 +1,92 @@
+%TC:envir minted 1 xall 
+%TC:envir algorithmic 1 xall
+
+% Include tables in word count
+%TC:envir table 0 word
+%TC:envir tabular 1 word
+
+% Include footnotes in word count
+%TC:macro \footnote [text]
+%TC:macro \footnotetext [text]
+
+%TC:group minted 0 0
+%TC:macro \mintinline [ignore]
+%TC:macro \colb [ignore]
+%TC:macro \hyperref [ignore]
+
+You will need three Raspberry Pis: two acting as hosts and one as the router. You will also need two Ethernet cables and two USB-to-Ethernet adapters. Use the cables to connect both your hosts to the router as shown below. Static router addresses have been defined by the P4 program.
+
+\begin{figure}[htbp]
+  \centering
+    \includegraphics[width=1\textwidth]{figures/appendices/icmpv6_ndp_setup.jpg}
+\end{figure}
+
+Run \texttt{ip a} on the router to learn the MAC and IP addresses of the USB ports connected to your hosts. Edit the P4 program to define constant static router IPv6 and MAC addresses (at the top of the program) such that you have one entry for each subnet. These will be referred to as \texttt{IPra}, \texttt{MACra} and \texttt{IPrb}, \texttt{MACrb}. The MAC addresses should match the router’s port MAC addresses, and the IP addresses should belong to the same subnets as the ports. 
+
+Choose IPv6 addresses \texttt{IPa} and \texttt{IPb} for the hosts such that they belong to the same subnet as their respective router USB ports. Also run ip a on the hosts to learn their MAC addresses \texttt{MACa} and \texttt{MACb}.
+
+On Host 1, open a command prompt and run:
+\begin{quote}
+    \texttt{sudo ifconfig eth0 inet6 add IPa}
+    
+    \texttt{sudo ip -6 route add dev eth0 IPra}
+    
+    \texttt{sudo ip -6 route add dev eth0 IPb}
+    
+    \texttt{sudo ip -6 neigh show}
+\end{quote}
+
+The first line sets a static IPv6 address for Host 1, the second line defines a route to the router and the third line defines a route to Host 2. The fourth line outputs the neighbour entry table, which should initially be empty. 
+
+Run the same commands on Host 2:
+\begin{quote}
+    \texttt{sudo ifconfig eth0 inet6 add IPb}
+
+    \texttt{sudo ip -6 route add dev eth0 IPrb}
+
+    \texttt{sudo ip -6 route add dev eth0 IPa}
+    
+    \texttt{sudo ip -6 neigh show}
+\end{quote}
+
+Start the P4 program on the router and, using the CLI (or by using a \texttt{commands.txt} file, as explained in Appendix A), enter the following five commands:
+
+\begin{quote}
+    \texttt{table\_add MyIngress.ipv6\_lpm MyIngress.forward IPa/128 => MACa 0}
+    
+    \texttt{table\_add MyIngress.ipv6\_lpm MyIngress.forward IPb/128 => MACb 1}
+    
+    \texttt{table\_add MyIngress.nei\_responder MyIngress.nei\_adv IPa => MACa 1}
+    
+    \texttt{table\_add MyIngress.nei\_responder MyIngress.nei\_adv IPb => MACb 2}
+    
+    \texttt{table\_add MyIngress.nei\_responder MyIngress.nei\_adv IPra => MACra 1}
+    
+    \texttt{table\_add MyIngress.nei\_responder MyIngress.nei\_adv IPrb => MACrb 2}
+\end{quote}
+
+To test IPv6 forwarding, on Host 1, run the command to ping Host 2:
+\begin{quote}
+    \texttt{ping6 -I eth0 IPb}
+\end{quote}
+
+To test the ICMPv6 Echo Reply, on Host 1, run the command to ping the router:
+\begin{quote}
+    \texttt{ping6 -I eth0 IPra}
+\end{quote}
+
+To test the ICMPv6 time exceeded error message, run the command to ping either the other host or the router, with hop limit set to one:
+\begin{quote}
+    \texttt{ping6 -I eth0 IPrb -t 1}
+\end{quote}
+
+If you define a route and MAC neighbour entry to a random address and then direct an Echo Request towards it, you should receive a Destination Unreachable error message from the router.
+
+To check that neighbour solicitation and advertisement is working properly, output the neighbour table on a host after attempting to ping an address:
+\begin{quote}
+    \texttt{ping6 -I eth0 IPra}
+    
+    \texttt{sudo ip -6 neigh show}
+\end{quote}
+
+The equivalent commands can be performed on Host 2 to achieve the same results.

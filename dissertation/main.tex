@@ -1,0 +1,175 @@
+\documentclass[12pt,a4paper,twoside,openright]{report}
+\usepackage{preamble} % imported packages/macros/styling
+
+\usepackage[sorting=nty]{biblatex}
+\addbibresource{references.bib}
+
+\begin{document}
+
+\renewcommand{\quote}{\list{}{\rightmargin=\leftmargin\topsep=0pt}\item\relax}
+
+% Reduce align spacing
+% \setlength{\abovedisplayskip}{8pt}
+% \setlength{\belowdisplayskip}{8pt}
+% \setlength{\abovedisplayshortskip}{8pt}
+% \setlength{\belowdisplayshortskip}{8pt}
+
+%TC:ignore
+
+% ----------------------------------------------------------------------
+
+% title page 
+\pagestyle{empty}
+
+\rightline{\LARGE \textbf{Ellie Vitanov}}
+
+\vspace*{30mm}
+\begin{center}
+	\Huge
+	\textbf{Building an IPv6 Router in P4} \\[20mm]
+
+	\vspace{-2mm}
+	\includegraphics[scale=0.5]{./figures/crest.png}
+	\hspace{0mm}\\[20mm]
+	\vspace{2mm}
+
+
+	\LARGE
+	Computer Science Tripos -- Part II \\[1mm]
+	Churchill College \\[20mm]
+
+	\Large
+	\today
+\end{center}
+
+\newpage
+\thispagestyle{empty}
+
+% ----------------------------------------------------------------------
+
+\pagestyle{plain}
+
+\pagenumbering{roman}
+
+
+% declaration of originality
+\section*{Declaration}
+
+I, Ellie Vitanov of Churchill College, being a candidate for Part II of the Computer Science Tripos, hereby declare that this dissertation and the work described in it are my own work, unaided except as may be specified below, and that the dissertation does not contain material that has already been used to any substantial extent for a comparable purpose. In preparation of this dissertation I did not use text from AI-assisted platforms generating natural language answers to user queries, including but not limited to ChatGPT. I am content for my dissertation to be made available to the students and staff of the University.
+
+\emph{Signed:} Ellie Vitanov\\
+\emph{Date:} \today
+
+% proforma
+\chapter*{Proforma}
+ {\large
+  \begin{tabular}{ll}
+	  Candidate number:   & 2362D                                        \\
+	  Project Title:      & \bf Building an IPv6 Router in P4 \\
+	  Examination:        & \bf Computer Science Tripos -- Part II, 2024  \\
+	  Word Count:         & 11885\footnotemark[1]                           \\
+	  Code Line Count:    & 2540\footnotemark[2]                           \\
+	  Project Originator: & The Candidate and Prof. Andrew Moore          \\
+	  Project Supervisor: & Prof. Andrew Moore                            \\
+  \end{tabular}
+ }
+\footnotetext[1]{This word count was computed using {\texttt{texcount}}.}
+\footnotetext[2]{This code line count was computed using {\texttt{cloc}}}
+\stepcounter{footnote}
+
+\section*{Original Aims of the Project}
+The aim of this project is to implement an IPv6 router prototype in P4, a domain-specific language for controlling packets, and on the platform P4Pi, a software-based platform which can be run on a general-purpose device. The core objective is for IPv6 packets to be correctly identified and forwarded to the appropriate subnet. Project extensions are to implement additional IPv6 functionalities, such as ICMPv6 and Neighbour Discovery Protocol (NDP), and to provide support for both IPv4 and IPv6 packets.
+
+\section*{Work Completed}
+All core objectives and the majority of extensions were completed. The IPv6 router prototype supports parsing, longest prefix table matching, forwarding, two ICMPv6 informational messages, two ICMPv6 error messages, and two NDP messages. The dual-stack router prototype can identify and process both IPv4 and IPv6 packets. The evaluation focused on showing correctness, adherence to networking standards, and that performance in the network is not significantly impacted regardless of whether an example IPv4, the project IPv6, or the project dual-stack router prototype is used.
+
+\section*{Special Difficulties}
+
+None.
+
+% table of contents 
+\tableofcontents
+
+
+% ----------------------------------------------------------------------
+\newpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+%TC:endignore
+
+
+%TC:envir minted 1 xall 
+%TC:envir algorithmic 1 xall
+
+% Include tables in word count
+%TC:envir table 0 word
+%TC:envir tabular 1 word
+
+% Include footnotes in word count
+%TC:macro \footnote [text]
+%TC:macro \footnotetext [text]
+
+% main chapters
+\addtocontents{lol}{\protect\vspace*{10pt}}
+\chapter{Introduction}
+\input{chapters/introduction}
+
+\addtocontents{lol}{\protect\vspace*{10pt}}
+\chapter{Preparation}
+\input{chapters/preparation}
+
+\addtocontents{lol}{\protect\vspace*{10pt}}
+\chapter{Implementation}
+\input{chapters/implementation}
+
+\addtocontents{lol}{\protect\vspace*{10pt}}
+\chapter{Evaluation}
+\input{chapters/evaluation}
+
+
+\addtocontents{lol}{\protect\vspace*{10pt}}
+\chapter{Conclusions}
+\input{chapters/conclusions}
+
+
+% ----------------------------------------------------------------------
+%TC:ignore
+\newpage
+
+\addcontentsline{toc}{chapter}{\numberline{}Bibliography}
+\printbibliography
+
+% ----------------------------------------------------------------------
+
+\appendix
+
+\addtocontents{toc}{\protect\setcounter{tocdepth}{0}}
+
+\chapter{Running a P4 Program on the P4Pi Platform}
+\input{chapters/appendices/appendixA}
+
+\chapter{Commands in the CLI}
+\input{chapters/appendices/appendixB}
+
+\chapter{IPv6 Forwarding Experiment}
+\input{chapters/appendices/appendixC}
+
+\chapter{ICMPv6 Experiment}
+\input{chapters/appendices/appendixD}
+
+\chapter{NDP Experiment}
+\input{chapters/appendices/appendixE}
+
+\chapter{IPv6 Router Experiment}
+\input{chapters/appendices/appendixF}
+
+\chapter{Dual-Stack Router Experiment}
+\input{chapters/appendices/appendixG}
+
+\chapter{Project Proposal}
+\input{chapters/appendices/appendixH}
+
+
+% don't forget to append the original project proposal
+%TC:endignore
+\end{document}

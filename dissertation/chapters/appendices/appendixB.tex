@@ -1,0 +1,48 @@
+%TC:envir minted 1 xall 
+%TC:envir algorithmic 1 xall
+
+% Include tables in word count
+%TC:envir table 0 word
+%TC:envir tabular 1 word
+
+% Include footnotes in word count
+%TC:macro \footnote [text]
+%TC:macro \footnotetext [text]
+
+%TC:group minted 0 0
+%TC:macro \mintinline [ignore]
+%TC:macro \colb [ignore]
+%TC:macro \hyperref [ignore]
+
+The \texttt{simple\_switch\_CLI} gives you the ability to dynamically inspect, add, remove and modify entries in the tables defined by your P4 program. Below are some of the basic commands that can be used.
+
+To show all tables in the program:
+\begin{quote}
+    \texttt{show\_tables}
+\end{quote}
+
+To get information about a table:
+\begin{quote}
+    \texttt{table\_info tableX}
+\end{quote}
+
+To get all entries in a table:
+\begin{quote}
+    \texttt{table\_dump tableX}
+\end{quote}
+
+To add an entry to a table:
+\begin{quote}
+    \texttt{table\_add tableX actionX 9.9.9.9/32 => aa:bb:cc:dd:ee:ff 0}
+\end{quote}
+
+The above example matches an IP address to a MAC address. The \texttt{=>} sign separates the table key from the table action data. The CLI will return a success message that will end with 
+\begin{quote}
+    \texttt{entry has been added with handle Y}
+\end{quote}
+The value \texttt{Y} can now be used for all subsequent operations.
+
+To delete an entry:
+\begin{quote}
+    \texttt{table\_delete tableX Y}
+\end{quote}

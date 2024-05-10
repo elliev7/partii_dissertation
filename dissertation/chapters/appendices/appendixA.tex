@@ -1,0 +1,44 @@
+%TC:envir minted 1 xall 
+%TC:envir algorithmic 1 xall
+
+% Include tables in word count
+%TC:envir table 0 word
+%TC:envir tabular 1 word
+
+% Include footnotes in word count
+%TC:macro \footnote [text]
+%TC:macro \footnotetext [text]
+
+%TC:group minted 0 0
+%TC:macro \mintinline [ignore]
+%TC:macro \colb [ignore]
+%TC:macro \hyperref [ignore]
+
+Once you have written your P4 program file\texttt{ my\_program.p4}, you must compile it using the p4c compiler and run it on the simple switch target. To do so, go to the location of the P4 file on your P4Pi and run the command:
+
+\begin{quote}
+    \texttt{p4c --target bmv2 --arch v1model --std p4-16 my\_program.p4}
+\end{quote}
+
+This specifies the behavioural model (bmv2), the model architecture (v1model) and the version of the P4 language that the program is written in (p4-16). The command will generate two new files, \texttt{my\_program.p4i} and \texttt{my\_program.json}. Optionally, you can add another argument to produce a \texttt{.txt} file containing a description of the tables and objects in your P4 program:
+
+\begin{quote}
+    \texttt{p4c --target bmv2 --arch v1model --std p4-16 --p4runtime-files my\_program.p4info.txt my\_program.p4}
+\end{quote}
+
+Once you have compiled your P4 program, you run it by specifying the implementation of the bmv2 abstract switch that will be used. In this case we are running it on the simple switch target. Use the following command:
+
+\begin{quote} 
+    \texttt{simple\_switch -i 0@port0 -i 1@port1 my\_program.json \&}
+\end{quote}
+
+The values \texttt{port0} and \texttt{port1} will look similar to \texttt{enx0c37965f8a20}, but to discover the exact values, run \texttt{ip a} on the router and find the addresses of the ports you want to assign your P4 program to use. You can assign any number of interfaces depending on how many ports your program needs.
+
+You can then dynamically modify the P4 tables by running:
+\begin{quote}
+    \texttt{simple\_switch\_CLI}
+\end{quote}
+to enter the command-line interface environment, or you can put the commands you want to run in a \texttt{.txt} file and directly feed it into the runtime CLI, as so:
+\begin{quote}
+    \texttt{simple\_switch\_CLI < commands.txt}
+\end{quote}
